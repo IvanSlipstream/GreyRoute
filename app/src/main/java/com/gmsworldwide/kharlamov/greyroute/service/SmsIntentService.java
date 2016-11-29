@@ -1,4 +1,4 @@
-package com.gmsworldwide.kharlamov.greyroute;
+package com.gmsworldwide.kharlamov.greyroute.service;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -18,8 +18,6 @@ public class SmsIntentService extends IntentService {
     public static final String SMSC_KEY = "smsc";
     public static final String TEXT_KEY = "text";
     public static final String TP_OA_KEY = "tp_oa";
-
-    private static ResultReceiver sReceiver;
 
     public SmsIntentService() {
         super("SmsIntentService");
@@ -57,7 +55,8 @@ public class SmsIntentService extends IntentService {
     }
 
     private void handleActionReceiveSms(Intent smsIntent) {
-        if (sReceiver !=null){
+        ResultReceiver receiver = SmsReceiverContext.getInstance().getReceiverContext();
+        if (receiver !=null){
             Bundle bundle = new Bundle();
             Object[] pduArray = (Object[]) smsIntent.getExtras().get(PDU_KEY);
             if (pduArray != null) {
@@ -67,15 +66,36 @@ public class SmsIntentService extends IntentService {
                     bundle.putString(SMSC_KEY, messages[i].getServiceCenterAddress());
                     bundle.putString(TEXT_KEY, messages[i].getDisplayMessageBody());
                     bundle.putString(TP_OA_KEY, messages[i].getDisplayOriginatingAddress());
-                    sReceiver.send(1, bundle);
+                    receiver.send(1, bundle);
                 }
             }
         }
     }
 
     private void handleActionSetListener(ResultReceiver receiver) {
-        sReceiver = receiver;
+        SmsReceiverContext.getInstance().setReceiverContext(receiver);
     }
 
+    public static class SmsReceiverContext {
+
+        private ResultReceiver mReceiverContext;
+
+        private SmsReceiverContext() {
+        }
+
+        private static SmsReceiverContext ourInstance = new SmsReceiverContext();
+
+        public static synchronized SmsReceiverContext getInstance() {
+            return ourInstance;
+        }
+
+        public ResultReceiver getReceiverContext() {
+            return mReceiverContext;
+        }
+
+        public void setReceiverContext(ResultReceiver receiverContext) {
+            this.mReceiverContext = receiverContext;
+        }
+    }
 
 }

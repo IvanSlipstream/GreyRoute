@@ -1,4 +1,4 @@
-package com.gmsworldwide.kharlamov.greyroute;
+package com.gmsworldwide.kharlamov.greyroute.fragments;
 
 import android.database.Cursor;
 import android.graphics.Color;
@@ -18,6 +18,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
+import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 
 import java.util.ArrayList;
 
