@@ -1,11 +1,13 @@
 package com.gmsworldwide.kharlamov.greyroute.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
@@ -15,9 +17,10 @@ import com.gmsworldwide.kharlamov.greyroute.R;
  */
 public class PermissionExplanationDialog extends DialogFragment {
 
-    private static final String KEY_EXPLANATION = "explanation";
+    private static final String KEY_EXPLANATION = "mExplanation";
 
-    private String explanation;
+    private String mExplanation;
+    private OnFragmentInteractionListener mListener;
 
     public static PermissionExplanationDialog newInstance(String explanation) {
 
@@ -33,7 +36,18 @@ public class PermissionExplanationDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            explanation = getArguments().getString(KEY_EXPLANATION);
+            mExplanation = getArguments().getString(KEY_EXPLANATION);
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            this.mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new UnsupportedOperationException("Must implement "
+                    + OnFragmentInteractionListener.class.getName());
         }
     }
 
@@ -42,7 +56,19 @@ public class PermissionExplanationDialog extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_dialog_text_button, container, false);
         TextView textView = (TextView) view.findViewById(R.id.tv_explanation);
-        textView.setText(explanation);
+        Button dismissButton = (Button) view.findViewById(R.id.btn_dialog_dismiss);
+        dismissButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dismiss();
+                mListener.onPermissionExplanationDismiss();
+            }
+        });
+        textView.setText(mExplanation);
         return view;
+    }
+
+    public interface OnFragmentInteractionListener {
+        void onPermissionExplanationDismiss();
     }
 }

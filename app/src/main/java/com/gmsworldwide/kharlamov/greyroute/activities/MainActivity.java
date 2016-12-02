@@ -17,11 +17,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+    implements PermissionExplanationDialog.OnFragmentInteractionListener {
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
+    private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
 
@@ -44,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
                         if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                                 Manifest.permission.RECEIVE_SMS)){
                             // TODO explain permission to the user
+                            PermissionExplanationDialog dialog =
+                                    PermissionExplanationDialog.newInstance(getResources().getString(R.string.app_name));
+                            dialog.show(getSupportFragmentManager(), TAG_EXPLANATION_DIALOG);
+                        } else {
                             ActivityCompat.requestPermissions(activity,
                                     new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
                         }
@@ -94,5 +101,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean hasPermissionReceiveSms(){
         int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS);
         return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
+    }
+
+    @Override
+    public void onPermissionExplanationDismiss() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
     }
 }
