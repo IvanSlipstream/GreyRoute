@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">GreyRoute</string>
+    <string name="app_name">Grey Route</string>
     <string name="action_settings">Settings</string>
+    <string name="broadcast_sms_explanation">You have turned on analyzing of incoming SMS.
+        \nPermission to read incoming SMS is required for that.</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

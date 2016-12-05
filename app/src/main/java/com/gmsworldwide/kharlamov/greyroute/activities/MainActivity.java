@@ -12,13 +12,19 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
+import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener {
@@ -46,9 +52,8 @@ public class MainActivity extends AppCompatActivity
                         // request permissions
                         if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                                 Manifest.permission.RECEIVE_SMS)){
-                            // TODO explain permission to the user
                             PermissionExplanationDialog dialog =
-                                    PermissionExplanationDialog.newInstance(getResources().getString(R.string.app_name));
+                                    PermissionExplanationDialog.newInstance(getResources().getString(R.string.broadcast_sms_explanation));
                             dialog.show(getSupportFragmentManager(), TAG_EXPLANATION_DIALOG);
                         } else {
                             ActivityCompat.requestPermissions(activity,
@@ -90,6 +95,8 @@ public class MainActivity extends AppCompatActivity
             case REQUEST_CODE_PERMISSION_RECEIVE_SMS:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     registerReceiveSmsListener(this);
+                } else {
+                    mSwRegisterReceiver.setChecked(false);
                 }
         }
     }
@@ -107,5 +114,17 @@ public class MainActivity extends AppCompatActivity
     public void onPermissionExplanationDismiss() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
+    }
+
+    public boolean sendSmscReport(SmsBriefData data) {
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        Task<Void> task = mDatabase.child("new_smsc").push().setValue(data.getSmsc());
+        task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Log.d("test", "Task "+task.toString()+" completed.");
+            }
+        });
+        return false;
     }
 }
