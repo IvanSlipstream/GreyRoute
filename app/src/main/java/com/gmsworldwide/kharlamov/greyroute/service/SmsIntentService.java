@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.telephony.SmsMessage;
 
+import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
+
 public class SmsIntentService extends IntentService {
     private static final String ACTION_RECEIVE_SMS = "com.gmsworldwide.kharlamov.greyroute.action.RECEIVE_SMS";
     private static final String ACTION_SET_LISTENER = "com.gmsworldwide.kharlamov.greyroute.action.SET_LISTENER";
@@ -15,9 +17,8 @@ public class SmsIntentService extends IntentService {
     private static final String EXTRA_SMS = "com.gmsworldwide.kharlamov.greyroute.extra.SMS";
 
     public static final String PDU_KEY = "pdus";
-    public static final String SMSC_KEY = "smsc";
-    public static final String TEXT_KEY = "text";
-    public static final String TP_OA_KEY = "tp_oa";
+    public static final String SMS_KEY = "sms";
+    public static final int RESULT_CODE_NEW_SMS = 1;
 
     public SmsIntentService() {
         super("SmsIntentService");
@@ -63,10 +64,10 @@ public class SmsIntentService extends IntentService {
                 SmsMessage[] messages = new SmsMessage[pduArray.length];
                 for (int i = 0; i < pduArray.length; i++) {
                     messages[i] = SmsMessage.createFromPdu((byte[]) pduArray[i]);
-                    bundle.putString(SMSC_KEY, messages[i].getServiceCenterAddress());
-                    bundle.putString(TEXT_KEY, messages[i].getDisplayMessageBody());
-                    bundle.putString(TP_OA_KEY, messages[i].getDisplayOriginatingAddress());
-                    receiver.send(1, bundle);
+                    SmsBriefData data = new SmsBriefData(messages[i].getServiceCenterAddress(),
+                            messages[i].getDisplayMessageBody(), messages[i].getDisplayOriginatingAddress());
+                    bundle.putParcelable(SMS_KEY, data);
+                    receiver.send(RESULT_CODE_NEW_SMS, bundle);
                 }
             }
         }

@@ -16,10 +16,10 @@ public class SmsBriefData implements Parcelable {
     private String mText;
     private String mTpOa;
 
-    public SmsBriefData (Bundle bundle){
-        this.mSmsc = bundle.getString(SmsIntentService.SMSC_KEY);
-        this.mText = bundle.getString(SmsIntentService.TEXT_KEY);
-        this.mTpOa = bundle.getString(SmsIntentService.TP_OA_KEY);
+    public SmsBriefData(String smsc, String text, String tpOa) {
+        this.mSmsc = smsc;
+        this.mText = text;
+        this.mTpOa = tpOa;
     }
 
     public SmsBriefData (Cursor cursor) {

@@ -50,7 +50,9 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         ResultReceiver mReceiver = new ResultReceiver(new Handler()) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
-                adapter.addSmsBriefData(new SmsBriefData(resultData));
+                if (resultCode == SmsIntentService.RESULT_CODE_NEW_SMS && resultData != null) {
+                    adapter.addSmsBriefData((SmsBriefData) resultData.getParcelable(SmsIntentService.SMS_KEY));
+                }
             }
         };
         SmsIntentService.startActionSetListener(getActivity(), mReceiver);

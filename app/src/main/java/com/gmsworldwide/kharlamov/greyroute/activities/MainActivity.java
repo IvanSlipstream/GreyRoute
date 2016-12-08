@@ -91,13 +91,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        boolean isPermissionGranted = false;
         switch (requestCode) {
             case REQUEST_CODE_PERMISSION_RECEIVE_SMS:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                isPermissionGranted =  (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED);
+                if (isPermissionGranted) {
                     registerReceiveSmsListener(this);
-                } else {
-                    mSwRegisterReceiver.setChecked(false);
                 }
+                mSwRegisterReceiver.setChecked(isPermissionGranted);
+                break;
         }
     }
 
