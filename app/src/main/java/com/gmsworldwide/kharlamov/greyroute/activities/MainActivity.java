@@ -2,6 +2,7 @@ package com.gmsworldwide.kharlamov.greyroute.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -31,8 +33,15 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
+    private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
+    private String mSimOperator;
+    protected boolean mTaskSuccessful = false;
+
+    public boolean isTaskSuccessful() {
+        return mTaskSuccessful;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,11 +129,17 @@ public class MainActivity extends AppCompatActivity
 
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        Task<Void> task = mDatabase.child("new_smsc").push().setValue(data.getSmsc());
+        TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        mSimOperator = UNKNOWN_MCC_MNC;
+        if (manager != null) {
+            mSimOperator = manager.getSimOperator();
+        }
+        Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).push().setValue(data.getSmsc());
         task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                Log.d("test", "Task "+task.toString()+" completed.");
+                mTaskSuccessful = task.isSuccessful();
+                Log.d("test", String.format("Task %s completed, %s.", task.toString(), task.isSuccessful() ? "success" : "failure"));
             }
         });
         return false;
