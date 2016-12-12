@@ -20,6 +20,7 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.fragments.MainActivityFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity
     private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
-    private String mSimOperator;
     protected boolean mTaskSuccessful = false;
 
     public boolean isTaskSuccessful() {
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                // TODO handle report saving
             }
         });
     }
@@ -91,7 +91,11 @@ public class MainActivity extends AppCompatActivity
         mReceiver = new ResultReceiver(new Handler()){
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
-                // TODO handle receiving SMS
+                if (resultCode == SmsIntentService.RESULT_CODE_NEW_SMS && resultData != null) {
+                    MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_smsc_list);
+                    assert fragment != null;
+                    fragment.addSmsBriefData((SmsBriefData) resultData.getParcelable(SmsIntentService.SMS_KEY));
+                }
             }
         };
         mSwRegisterReceiver.setChecked(hasPermissionReceiveSms() &&
@@ -130,7 +134,7 @@ public class MainActivity extends AppCompatActivity
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        mSimOperator = UNKNOWN_MCC_MNC;
+        String mSimOperator = UNKNOWN_MCC_MNC;
         if (manager != null) {
             mSimOperator = manager.getSimOperator();
         }

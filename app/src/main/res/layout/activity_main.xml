@@ -28,7 +28,16 @@
         android:layout_gravity="top|end"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <!--<include layout="@layout/content_main" />-->
+    <FrameLayout
+        android:id="@+id/fl_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start|top"
+        app:layout_behavior="com.gmsworldwide.kharlamov.greyroute.behavior.SwitchFrameLayoutBehavior">
+
+        <include layout="@layout/content_main" />
+
+    </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

@@ -1,6 +1,5 @@
 package com.gmsworldwide.kharlamov.greyroute.fragments;
 
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -55,7 +54,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 }
             }
         };
-        SmsIntentService.startActionSetListener(getActivity(), mReceiver);
         getActivity().getSupportLoaderManager().initLoader(LOADER_ID_INBOX, null, this);
     }
 
@@ -63,7 +61,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View mView = inflater.inflate(R.layout.fragment_main, container, false);
-        mRecyclerView = (RecyclerView) mView.findViewById(R.id.rvSmsList);
+        mRecyclerView = (RecyclerView) mView.findViewById(R.id.rv_sms_list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(adapter);
         return mView;
@@ -74,6 +72,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         super.onSaveInstanceState(outState);
         SmsListAdapter adapter = (SmsListAdapter) mRecyclerView.getAdapter();
         outState.putParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST, adapter.getSmsBriefDataList());
+    }
+
+    public void addSmsBriefData(SmsBriefData data) {
+        if (adapter != null) {
+            adapter.addSmsBriefData(data);
+        }
     }
 
     @Override
@@ -120,7 +124,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         private int mMarkedColor;
         private boolean mMarked;
 
-        public SmsHolder(View itemView) {
+        SmsHolder(View itemView) {
             super(itemView);
             tvSmscOaAddress = (TextView) itemView.findViewById(android.R.id.text1);
             tvText = (TextView) itemView.findViewById(android.R.id.text2);
@@ -134,7 +138,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             }
         }
 
-        public void mark (boolean marked){
+        private void mark(boolean marked){
             if (marked) {
                 itemView.setBackgroundColor(Color.GREEN);
                 this.mMarked = true;
@@ -145,15 +149,15 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             }
         }
 
-        public boolean isMarked() {
+        private boolean isMarked() {
             return mMarked;
         }
 
-        public TextView getTvSmscOaAddress() {
+        private TextView getTvSmscOaAddress() {
             return tvSmscOaAddress;
         }
 
-        public TextView getTvText() {
+        private TextView getTvText() {
             return tvText;
         }
     }
@@ -161,15 +165,15 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         private ArrayList<SmsBriefData> mSmsBriefDataList;
 
-        public SmsListAdapter() {
+        SmsListAdapter() {
             this.mSmsBriefDataList = new ArrayList<>();
         }
 
-        public ArrayList<SmsBriefData> getSmsBriefDataList() {
+        private ArrayList<SmsBriefData> getSmsBriefDataList() {
             return mSmsBriefDataList;
         }
 
-        public void setSmsBriefDataList(ArrayList<SmsBriefData> smsBriefDataList) {
+        private void setSmsBriefDataList(ArrayList<SmsBriefData> smsBriefDataList) {
             this.mSmsBriefDataList = smsBriefDataList;
         }
 
@@ -201,7 +205,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             return mSmsBriefDataList.size();
         }
 
-        public void addSmsBriefData (SmsBriefData smsBriefData) {
+        private void addSmsBriefData(SmsBriefData smsBriefData) {
             mSmsBriefDataList.add(0, smsBriefData);
         }
     }
