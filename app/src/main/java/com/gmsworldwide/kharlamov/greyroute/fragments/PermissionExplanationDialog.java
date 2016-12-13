@@ -17,16 +17,18 @@ import com.gmsworldwide.kharlamov.greyroute.R;
  */
 public class PermissionExplanationDialog extends DialogFragment {
 
-    private static final String KEY_EXPLANATION = "mExplanation";
+    private static final String KEY_EXPLANATION = "explanation";
+    private static final String KEY_REQUEST_CODE = "request_code";
 
     private String mExplanation;
+    private int mRequestCode;
     private OnFragmentInteractionListener mListener;
 
-    public static PermissionExplanationDialog newInstance(String explanation) {
+    public static PermissionExplanationDialog newInstance(String explanation, int requestCode) {
 
         Bundle args = new Bundle();
         args.putString(KEY_EXPLANATION, explanation);
-
+        args.putInt(KEY_REQUEST_CODE, requestCode);
         PermissionExplanationDialog fragment = new PermissionExplanationDialog();
         fragment.setArguments(args);
         return fragment;
@@ -37,6 +39,7 @@ public class PermissionExplanationDialog extends DialogFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mExplanation = getArguments().getString(KEY_EXPLANATION);
+            mRequestCode = getArguments().getInt(KEY_REQUEST_CODE, -1);
         }
     }
 
@@ -61,7 +64,7 @@ public class PermissionExplanationDialog extends DialogFragment {
             @Override
             public void onClick(View view) {
                 dismiss();
-                mListener.onPermissionExplanationDismiss();
+                mListener.onPermissionExplanationDismiss(mRequestCode);
             }
         });
         textView.setText(mExplanation);
@@ -69,6 +72,6 @@ public class PermissionExplanationDialog extends DialogFragment {
     }
 
     public interface OnFragmentInteractionListener {
-        void onPermissionExplanationDismiss();
+        void onPermissionExplanationDismiss(int requestCode);
     }
 }

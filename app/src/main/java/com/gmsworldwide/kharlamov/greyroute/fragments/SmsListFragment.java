@@ -26,7 +26,7 @@ import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 
 import java.util.ArrayList;
 
-public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<SmsBriefData>> {
+public class SmsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<SmsBriefData>> {
 
     public static final Uri URI_SMS_INBOX = Uri.parse("content://sms/inbox");
     public static final String INBOX_SORT_ORDER = "date";
@@ -36,24 +36,25 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private RecyclerView mRecyclerView;
     private SmsListAdapter adapter;
 
-    public MainActivityFragment() {
+    public SmsListFragment() {
     }
 
+    public static SmsListFragment newInstance() {
+        
+        Bundle args = new Bundle();
+        
+        SmsListFragment fragment = new SmsListFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+    
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new SmsListAdapter();
-        if (savedInstanceState != null) {
-            adapter.setSmsBriefDataList(savedInstanceState.<SmsBriefData>getParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST));
-        }
-        ResultReceiver mReceiver = new ResultReceiver(new Handler()) {
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                if (resultCode == SmsIntentService.RESULT_CODE_NEW_SMS && resultData != null) {
-                    adapter.addSmsBriefData((SmsBriefData) resultData.getParcelable(SmsIntentService.SMS_KEY));
-                }
-            }
-        };
+//        if (savedInstanceState != null) {
+//            adapter.setSmsBriefDataList(savedInstanceState.<SmsBriefData>getParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST));
+//        }
         getActivity().getSupportLoaderManager().initLoader(LOADER_ID_INBOX, null, this);
     }
 
@@ -67,12 +68,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         return mView;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        SmsListAdapter adapter = (SmsListAdapter) mRecyclerView.getAdapter();
-        outState.putParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST, adapter.getSmsBriefDataList());
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        SmsListAdapter adapter = (SmsListAdapter) mRecyclerView.getAdapter();
+//        outState.putParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST, adapter.getSmsBriefDataList());
+//    }
 
     public void addSmsBriefData(SmsBriefData data) {
         if (adapter != null) {
