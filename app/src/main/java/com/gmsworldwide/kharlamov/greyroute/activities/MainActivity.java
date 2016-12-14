@@ -42,9 +42,11 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
     private static final String TAG_SMS_LIST = "sms_list";
+    private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
     protected boolean mTaskSuccessful = false;
+    private long mSelectionPeriod = 0;
 
     public boolean isTaskSuccessful() {
         return mTaskSuccessful;
@@ -59,6 +61,8 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fl_fragment_container, AnalyzeInboxFragment.newInstance(), TAG_ANALYSIS_FORM)
                     .commit();
+        } else {
+            mSelectionPeriod = savedInstanceState.getLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, 0);
         }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         mSwRegisterReceiver = (Switch) findViewById(R.id.sw_register_receiver);
@@ -97,6 +101,12 @@ public class MainActivity extends AppCompatActivity
                 // TODO handle report saving
             }
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
     }
 
     @Override
@@ -182,7 +192,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onInboxAnalyzeRequested() {
+    public void onInboxAnalyzeRequested(long selectionPeriod) {
+        // save selection period in seconds
+        mSelectionPeriod = selectionPeriod;
         if (hasPermissionReadSms()){
             replaceFragmentSmsList();
         } else {
@@ -202,10 +214,9 @@ public class MainActivity extends AppCompatActivity
 
     private void replaceFragmentSmsList() {
         // replace a fragment
-        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_smsc_list);
         getSupportFragmentManager().beginTransaction()
                 .addToBackStack(TAG_ANALYSIS_FORM)
-                .replace(R.id.fl_fragment_container, SmsListFragment.newInstance(), TAG_SMS_LIST)
+                .replace(R.id.fl_fragment_container, SmsListFragment.newInstance(mSelectionPeriod), TAG_SMS_LIST)
                 .commit();
     }
 }

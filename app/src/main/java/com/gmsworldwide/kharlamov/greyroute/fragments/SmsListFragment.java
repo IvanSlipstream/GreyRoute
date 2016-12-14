@@ -33,16 +33,18 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
     private static final int LOADER_ID_INBOX = 1;
     private static final String RETAIN_INSTANCE_KEY_SMS_LIST = "sms_list";
+    private static final String KEY_SELECTION_PERIOD = "selection_period";
     private RecyclerView mRecyclerView;
     private SmsListAdapter adapter;
+    private long mSelectionPeriod;
 
     public SmsListFragment() {
     }
 
-    public static SmsListFragment newInstance() {
+    public static SmsListFragment newInstance(long mSelectionPeriod) {
         
         Bundle args = new Bundle();
-        
+        args.putLong(KEY_SELECTION_PERIOD, mSelectionPeriod);
         SmsListFragment fragment = new SmsListFragment();
         fragment.setArguments(args);
         return fragment;
@@ -52,6 +54,9 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new SmsListAdapter();
+        if (getArguments() != null) {
+            mSelectionPeriod = getArguments().getLong(KEY_SELECTION_PERIOD, 0);
+        }
 //        if (savedInstanceState != null) {
 //            adapter.setSmsBriefDataList(savedInstanceState.<SmsBriefData>getParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST));
 //        }

@@ -38,7 +38,7 @@ public class AnalyzeInboxFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 assert mListener != null;
-                mListener.onInboxAnalyzeRequested();
+                mListener.onInboxAnalyzeRequested(0); // TODO: pass a value from the SeekBar
             }
         });
         return view;
@@ -62,6 +62,6 @@ public class AnalyzeInboxFragment extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-        void onInboxAnalyzeRequested();
+        void onInboxAnalyzeRequested(long seconds);
     }
 }
