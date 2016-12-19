@@ -32,7 +32,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     public static final String INBOX_SORT_ORDER = "date";
 
     private static final int LOADER_ID_INBOX = 1;
-    private static final String RETAIN_INSTANCE_KEY_SMS_LIST = "sms_list";
+    private static final String RETAIN_INSTANCE_KEY_CHECKED_LIST = "checked_list";
     private static final String KEY_SELECTION_PERIOD = "selection_period";
     private RecyclerView mRecyclerView;
     private SmsListAdapter adapter;
@@ -57,10 +57,9 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         if (getArguments() != null) {
             mSelectionPeriod = getArguments().getLong(KEY_SELECTION_PERIOD, 0);
         }
-//        if (savedInstanceState != null) {
-//            adapter.setSmsBriefDataList(savedInstanceState.<SmsBriefData>getParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST));
-//        }
-        getActivity().getSupportLoaderManager().initLoader(LOADER_ID_INBOX, null, this);
+        if (savedInstanceState != null) {
+            adapter.setCheckedList(savedInstanceState.getIntegerArrayList(RETAIN_INSTANCE_KEY_CHECKED_LIST));
+        }
     }
 
     @Override
@@ -73,12 +72,18 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         return mView;
     }
 
-//    @Override
-//    public void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        SmsListAdapter adapter = (SmsListAdapter) mRecyclerView.getAdapter();
-//        outState.putParcelableArrayList(RETAIN_INSTANCE_KEY_SMS_LIST, adapter.getSmsBriefDataList());
-//    }
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        SmsListAdapter adapter = (SmsListAdapter) mRecyclerView.getAdapter();
+        outState.putIntegerArrayList(RETAIN_INSTANCE_KEY_CHECKED_LIST, adapter.getCheckedList());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().getSupportLoaderManager().initLoader(LOADER_ID_INBOX, null, this);
+    }
 
     public void addSmsBriefData(SmsBriefData data) {
         if (adapter != null) {
@@ -111,10 +116,8 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onLoadFinished(Loader<ArrayList<SmsBriefData>> loader, ArrayList<SmsBriefData> data) {
-        for (SmsBriefData smsBriefData: data) {
-            adapter.addSmsBriefData(smsBriefData);
-            mRecyclerView.swapAdapter(adapter, false);
-        }
+        adapter.setSmsBriefDataList(data);
+        mRecyclerView.swapAdapter(adapter, false);
     }
 
     @Override
@@ -170,9 +173,11 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     public class SmsListAdapter extends RecyclerView.Adapter<SmsHolder> {
 
         private ArrayList<SmsBriefData> mSmsBriefDataList;
+        private ArrayList<Integer> mCheckedList;
 
         SmsListAdapter() {
             this.mSmsBriefDataList = new ArrayList<>();
+            this.mCheckedList = new ArrayList<>();
         }
 
         private ArrayList<SmsBriefData> getSmsBriefDataList() {
@@ -181,6 +186,14 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
         private void setSmsBriefDataList(ArrayList<SmsBriefData> smsBriefDataList) {
             this.mSmsBriefDataList = smsBriefDataList;
+        }
+
+        ArrayList<Integer> getCheckedList() {
+            return mCheckedList;
+        }
+
+        void setCheckedList(ArrayList<Integer> checkedList) {
+            this.mCheckedList = checkedList;
         }
 
         @Override
@@ -202,8 +215,16 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 @Override
                 public void onClick(View v) {
                     holder.mark(!holder.isMarked());
+                    if (holder.isMarked()){
+                        mCheckedList.add(holder.getAdapterPosition());
+                    } else {
+                        mCheckedList.remove((Integer) holder.getAdapterPosition());
+                    }
                 }
             });
+            if (mCheckedList.contains(position)) {
+                holder.mark(true);
+            }
         }
 
         @Override
@@ -213,6 +234,11 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
         private void addSmsBriefData(SmsBriefData smsBriefData) {
             mSmsBriefDataList.add(0, smsBriefData);
+            for (int i=0;i<mCheckedList.size();i++){
+                Integer itemIndex = mCheckedList.get(i);
+                itemIndex++;
+                mCheckedList.set(i, itemIndex);
+            }
         }
     }
 }
