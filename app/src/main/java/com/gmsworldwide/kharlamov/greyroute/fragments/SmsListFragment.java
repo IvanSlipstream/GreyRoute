@@ -101,6 +101,14 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
+    public ArrayList<SmsBriefData> getSmsBriefDataList(){
+        if (adapter != null) {
+            return adapter.getSmsBriefDataList();
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public Loader<ArrayList<SmsBriefData>> onCreateLoader(int id, Bundle args) {
         return new AsyncTaskLoader<ArrayList<SmsBriefData>>(getContext()) {
