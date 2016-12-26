@@ -28,7 +28,7 @@ public class AnalyzeInboxFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private SeekBar mSbPeriod;
     private TextView mTvPeriodHint;
-    private long mSelectionPeriod = 0;
+    private long mSelectionPeriod;
     private int mScrollBarPosition = 0;
 
     public AnalyzeInboxFragment() {}
@@ -43,6 +43,7 @@ public class AnalyzeInboxFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mSelectionPeriod = getDefaultSelectionPeriod();
         if (savedInstanceState != null) {
             mScrollBarPosition = savedInstanceState.getInt(RETAIN_INSTANCE_SB_POSITION, 0);
         }
@@ -69,7 +70,7 @@ public class AnalyzeInboxFragment extends Fragment {
                 Calendar calendar = Calendar.getInstance();
                 switch (progress) {
                     case SEEK_POSITION_LAST_HOUR:
-                        mSelectionPeriod = calendar.getTimeInMillis()-INTERVAL_HOUR;
+                        mSelectionPeriod = getDefaultSelectionPeriod();
                         mTvPeriodHint.setText(getText(R.string.period_last_hour));
                         break;
                     case SEEK_POSITION_TODAY:
@@ -133,5 +134,10 @@ public class AnalyzeInboxFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onInboxAnalyzeRequested(long seconds);
+    }
+
+    private long getDefaultSelectionPeriod() {
+        Calendar calendar = Calendar.getInstance();
+        return calendar.getTimeInMillis()-INTERVAL_HOUR;
     }
 }
