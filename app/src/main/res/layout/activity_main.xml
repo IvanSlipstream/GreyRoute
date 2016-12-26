@@ -35,8 +35,6 @@
         android:layout_gravity="start|top"
         app:layout_behavior="com.gmsworldwide.kharlamov.greyroute.behavior.SwitchFrameLayoutBehavior">
 
-        <!--<include layout="@layout/content_analyze_inbox" />-->
-
     </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
@@ -45,6 +43,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
+        android:src="@mipmap/ic_send_report" />
 
 </android.support.design.widget.CoordinatorLayout>
