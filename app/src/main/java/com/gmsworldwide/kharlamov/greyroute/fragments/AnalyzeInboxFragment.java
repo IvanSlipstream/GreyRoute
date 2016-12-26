@@ -23,11 +23,13 @@ public class AnalyzeInboxFragment extends Fragment {
     public static final int SEEK_POSITION_TODAY = 1;
     public static final int SEEK_POSITION_LAST_WEEK = 2;
     public static final int SEEK_POSITION_LIFETIME = 3;
+    private static final String RETAIN_INSTANCE_SB_POSITION = "scroll_bar_position";
 
     private OnFragmentInteractionListener mListener;
     private SeekBar mSbPeriod;
     private TextView mTvPeriodHint;
     private long mSelectionPeriod = 0;
+    private int mScrollBarPosition = 0;
 
     public AnalyzeInboxFragment() {}
 
@@ -41,7 +43,9 @@ public class AnalyzeInboxFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO retain seek bar position
+        if (savedInstanceState != null) {
+            mScrollBarPosition = savedInstanceState.getInt(RETAIN_INSTANCE_SB_POSITION, 0);
+        }
     }
 
     @Override
@@ -97,6 +101,8 @@ public class AnalyzeInboxFragment extends Fragment {
 
             }
         });
+        // scroll bar position retaining instance
+        mSbPeriod.setVerticalScrollbarPosition(mScrollBarPosition);
         return view;
     }
 
@@ -115,6 +121,14 @@ public class AnalyzeInboxFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (outState != null) {
+            outState.putInt(RETAIN_INSTANCE_SB_POSITION, mSbPeriod.getVerticalScrollbarPosition());
+        }
     }
 
     public interface OnFragmentInteractionListener {
