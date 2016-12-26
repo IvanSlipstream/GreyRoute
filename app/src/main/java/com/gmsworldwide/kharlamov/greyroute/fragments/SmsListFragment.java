@@ -38,6 +38,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     private RecyclerView mRecyclerView;
     private SmsListAdapter adapter;
     private long mSelectionPeriod;
+    private boolean mReloadInbox = true;
 
     public SmsListFragment() {
     }
@@ -83,7 +84,14 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().getSupportLoaderManager().initLoader(LOADER_ID_INBOX, null, this);
+        LoaderManager loaderManager = getActivity().getSupportLoaderManager();
+        // check if the user has set a new selection period and thus reload or not the SMS Inbox
+        if (mReloadInbox) {
+            loaderManager.restartLoader(LOADER_ID_INBOX, null, this);
+        } else {
+            loaderManager.initLoader(LOADER_ID_INBOX, null, this);
+        }
+        mReloadInbox = false;
     }
 
     public void addSmsBriefData(SmsBriefData data) {
@@ -108,7 +116,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 ArrayList<SmsBriefData> result = new ArrayList<>();
                 Cursor c = getContext().getContentResolver().query(URI_SMS_INBOX, null, condition, null, INBOX_SORT_ORDER);
                 if (c != null) {
-                    String date = "no date";
                     while (c.moveToNext()) {
                         result.add(new SmsBriefData(c));
                     }
