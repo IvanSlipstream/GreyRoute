@@ -4,7 +4,11 @@
     <string name="broadcast_sms_explanation">You have turned on analyzing of incoming SMS.
         \nPermission to read incoming SMS is required for that.</string>
     <string name="dismiss">Dismiss</string>
-    <string name="analyze_your_inbox">Analyze Your Inbox</string>
+    <string name="choose_period_to_analyze">Choose period to analyze</string>
+    <string name="period_last_hour">Last Hour</string>
+    <string name="period_today">Today</string>
+    <string name="period_last_week">Last Week</string>
+    <string name="period_lifetime">Lifetime</string>
     <string name="date_range">Date range</string>
     <string name="inbox_analyze_explanation">You have requested analysis of your SMS Inbox.
         \nTo do that, we require your permission.</string>

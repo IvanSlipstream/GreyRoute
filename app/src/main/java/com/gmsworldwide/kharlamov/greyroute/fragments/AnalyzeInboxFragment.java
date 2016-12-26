@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
 
@@ -25,6 +26,7 @@ public class AnalyzeInboxFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private SeekBar mSbPeriod;
+    private TextView mTvPeriodHint;
     private long mSelectionPeriod = 0;
 
     public AnalyzeInboxFragment() {}
@@ -46,6 +48,7 @@ public class AnalyzeInboxFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_analyze_inbox, container, false);
+        mTvPeriodHint = (TextView) view.findViewById(R.id.tv_period_hint);
         Button btnAnalyzeInbox = (Button) view.findViewById(R.id.btn_start_analyze_inbox);
         btnAnalyzeInbox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,6 +66,7 @@ public class AnalyzeInboxFragment extends Fragment {
                 switch (progress) {
                     case SEEK_POSITION_LAST_HOUR:
                         mSelectionPeriod = calendar.getTimeInMillis()-INTERVAL_HOUR;
+                        mTvPeriodHint.setText(getText(R.string.period_last_hour));
                         break;
                     case SEEK_POSITION_TODAY:
                         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -70,12 +74,15 @@ public class AnalyzeInboxFragment extends Fragment {
                         calendar.set(Calendar.SECOND, 0);
                         calendar.set(Calendar.MILLISECOND, 0);
                         mSelectionPeriod = calendar.getTimeInMillis();
+                        mTvPeriodHint.setText(getText(R.string.period_today));
                         break;
                     case SEEK_POSITION_LAST_WEEK:
                         mSelectionPeriod = calendar.getTimeInMillis()-7*INTERVAL_DAY;
+                        mTvPeriodHint.setText(getText(R.string.period_last_week));
                         break;
                     case SEEK_POSITION_LIFETIME:
                         mSelectionPeriod = 0;
+                        mTvPeriodHint.setText(getText(R.string.period_lifetime));
                         break;
                 }
             }
