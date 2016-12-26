@@ -9,5 +9,8 @@
     <string name="inbox_analyze_explanation">You have requested analysis of your SMS Inbox.
         \nTo do that, we require your permission.</string>
     <string name="analyze">Analyze</string>
+    <string name="placeholder_smsc_address">SMSC Address</string>
+    <string name="placeholder_tp_oa">TP-OA</string>
+    <string name="placeholder_sms_text">SMS Text</string>
 
 </resources>

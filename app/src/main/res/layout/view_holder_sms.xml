@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/cb_check_for_report"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:text="@string/placeholder_tp_oa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_smsc_address"
+        android:layout_toRightOf="@+id/cb_check_for_report"
+        android:layout_toEndOf="@+id/cb_check_for_report"
+        android:id="@+id/tv_tp_oa" />
+
+    <TextView
+        android:text="@string/placeholder_sms_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_tp_oa"
+        android:layout_alignLeft="@+id/tv_tp_oa"
+        android:layout_alignStart="@+id/tv_tp_oa"
+        android:id="@+id/tv_sms_text" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_smsc_address"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+        android:text="@string/placeholder_smsc_address"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/cb_check_for_report"
+        android:layout_toEndOf="@+id/cb_check_for_report" />
+</RelativeLayout>

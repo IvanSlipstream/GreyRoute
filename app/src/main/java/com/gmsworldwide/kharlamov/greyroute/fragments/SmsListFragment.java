@@ -5,8 +5,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.ResultReceiver;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -18,18 +16,21 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
-import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class SmsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<SmsBriefData>> {
 
     public static final Uri URI_SMS_INBOX = Uri.parse("content://sms/inbox");
-    public static final String INBOX_SORT_ORDER = "date";
+    public static final String INBOX_SORT_ORDER = "date desc";
+    public static final String INBOX_DATE_FIELD = "date";
 
     private static final int LOADER_ID_INBOX = 1;
     private static final String RETAIN_INSTANCE_KEY_CHECKED_LIST = "checked_list";
@@ -88,6 +89,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     public void addSmsBriefData(SmsBriefData data) {
         if (adapter != null) {
             adapter.addSmsBriefData(data);
+            mRecyclerView.swapAdapter(adapter, false);
         }
     }
 
@@ -101,9 +103,12 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
             @Override
             public ArrayList<SmsBriefData> loadInBackground() {
+                String condition = String.format(Locale.getDefault(),
+                        "%s > %d", INBOX_DATE_FIELD, mSelectionPeriod);
                 ArrayList<SmsBriefData> result = new ArrayList<>();
-                Cursor c = getContext().getContentResolver().query(URI_SMS_INBOX, null, null, null, INBOX_SORT_ORDER);
+                Cursor c = getContext().getContentResolver().query(URI_SMS_INBOX, null, condition, null, INBOX_SORT_ORDER);
                 if (c != null) {
+                    String date = "no date";
                     while (c.moveToNext()) {
                         result.add(new SmsBriefData(c));
                     }
@@ -127,47 +132,27 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
     private class SmsHolder extends RecyclerView.ViewHolder {
 
-        private TextView tvSmscOaAddress;
-        private TextView tvText;
-        private int mUnmarkedColor;
-        private int mMarkedColor;
+        private TextView mTvSmscAddress;
+        private TextView mTvText;
+        private TextView mTvTpOa;
+        private CheckBox mCbMarked;
         private boolean mMarked;
 
         SmsHolder(View itemView) {
             super(itemView);
-            tvSmscOaAddress = (TextView) itemView.findViewById(android.R.id.text1);
-            tvText = (TextView) itemView.findViewById(android.R.id.text2);
-            Drawable background = itemView.getBackground();
-//            Resources.Theme theme = itemView.getContext().getTheme();
-//            mMarkedColor = theme.getResources().getColor(android.R.color.background_dark, theme);
-            if (background instanceof ColorDrawable){
-                mUnmarkedColor = ((ColorDrawable) background).getColor();
-            } else {
-                mUnmarkedColor = Color.TRANSPARENT;
-            }
+            mTvSmscAddress = (TextView) itemView.findViewById(R.id.tv_smsc_address);
+            mTvText = (TextView) itemView.findViewById(R.id.tv_sms_text);
+            mTvTpOa = (TextView) itemView.findViewById(R.id.tv_tp_oa);
+            mCbMarked = (CheckBox) itemView.findViewById(R.id.cb_check_for_report);
         }
 
         private void mark(boolean marked){
-            if (marked) {
-                itemView.setBackgroundColor(Color.GREEN);
-                this.mMarked = true;
-                // TODO bind color to the theme and fix hardcoded color
-            } else {
-                itemView.setBackgroundColor(mUnmarkedColor);
-                this.mMarked = false;
-            }
+            mCbMarked.setChecked(marked);
+            mMarked = marked;
         }
 
         private boolean isMarked() {
             return mMarked;
-        }
-
-        private TextView getTvSmscOaAddress() {
-            return tvSmscOaAddress;
-        }
-
-        private TextView getTvText() {
-            return tvText;
         }
     }
     public class SmsListAdapter extends RecyclerView.Adapter<SmsHolder> {
@@ -199,22 +184,20 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         @Override
         public SmsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(android.R.layout.simple_list_item_2, parent, false);
-            // TODO: make custom layout
+            View view = inflater.inflate(R.layout.view_holder_sms, parent, false);
             return new SmsHolder(view);
         }
 
         @Override
         public void onBindViewHolder(final SmsHolder holder, int position) {
-            SmsBriefData mSmsBriefData = mSmsBriefDataList.get(position);
-            String smscOa = String.format("SMSC: %s, TP-OA: %s",
-                    mSmsBriefData.getSmsc(), mSmsBriefData.getTpOa());
-            holder.getTvSmscOaAddress().setText(smscOa);
-            holder.getTvText().setText(mSmsBriefData.getText());
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+            SmsBriefData smsBriefData = mSmsBriefDataList.get(position);
+            holder.mTvSmscAddress.setText(smsBriefData.getSmsc());
+            holder.mTvTpOa.setText(smsBriefData.getTpOa());
+            holder.mTvText.setText(smsBriefData.getText());
+            holder.mCbMarked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
-                public void onClick(View v) {
-                    holder.mark(!holder.isMarked());
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    holder.mark(isChecked);
                     if (holder.isMarked()){
                         mCheckedList.add(holder.getAdapterPosition());
                     } else {
@@ -222,9 +205,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                     }
                 }
             });
-            if (mCheckedList.contains(position)) {
-                holder.mark(true);
-            }
+            holder.mark(mCheckedList.contains(position));
         }
 
         @Override
@@ -239,6 +220,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 itemIndex++;
                 mCheckedList.set(i, itemIndex);
             }
+            mCheckedList.add(0);
         }
     }
 }

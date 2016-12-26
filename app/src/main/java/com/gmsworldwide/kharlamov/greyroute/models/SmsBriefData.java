@@ -28,7 +28,7 @@ public class SmsBriefData implements Parcelable {
         this.mTpOa = cursor.getString(cursor.getColumnIndex("address"));
     }
 
-    protected SmsBriefData(Parcel in) {
+    private SmsBriefData(Parcel in) {
         mSmsc = in.readString();
         mText = in.readString();
         mTpOa = in.readString();

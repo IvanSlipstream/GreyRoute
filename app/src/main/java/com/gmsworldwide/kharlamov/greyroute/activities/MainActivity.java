@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // TODO: add "analysed" flag
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fl_fragment_container, AnalyzeInboxFragment.newInstance(), TAG_ANALYSIS_FORM)
@@ -116,9 +115,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 if (resultCode == SmsIntentService.RESULT_CODE_NEW_SMS && resultData != null) {
-                    SmsListFragment fragment = (SmsListFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_smsc_list);
-                    assert fragment != null;
-                    fragment.addSmsBriefData((SmsBriefData) resultData.getParcelable(SmsIntentService.SMS_KEY));
+                    SmsListFragment fragment = (SmsListFragment) getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
+                    if (fragment != null) {
+                        fragment.addSmsBriefData((SmsBriefData) resultData.getParcelable(SmsIntentService.SMS_KEY));
+                    }
                 }
             }
         };
@@ -193,6 +193,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onInboxAnalyzeRequested(long selectionPeriod) {
+        // a callback from AnalyzeInboxFragment
         // save selection period in seconds
         mSelectionPeriod = selectionPeriod;
         if (hasPermissionReadSms()){
@@ -213,7 +214,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void replaceFragmentSmsList() {
-        // replace a fragment
+        // replace a fragment with SMS list fragment
         getSupportFragmentManager().beginTransaction()
                 .addToBackStack(TAG_ANALYSIS_FORM)
                 .replace(R.id.fl_fragment_container, SmsListFragment.newInstance(mSelectionPeriod), TAG_SMS_LIST)
