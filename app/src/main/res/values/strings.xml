@@ -16,5 +16,8 @@
     <string name="placeholder_smsc_address">SMSC Address</string>
     <string name="placeholder_tp_oa">TP-OA</string>
     <string name="placeholder_sms_text">SMS Text</string>
+    <string name="choose_push">Push</string>
+    <string name="choose_csv">CSV</string>
+    <string name="report_choice_explanation">How to make a report: send SMSC address over push (requires Internet) or construct a CSV document (requires permission to write data to your storage)?</string>
 
 </resources>

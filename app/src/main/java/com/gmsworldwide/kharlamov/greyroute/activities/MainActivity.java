@@ -23,6 +23,7 @@ import android.widget.Switch;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
+import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
 import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
@@ -32,25 +33,25 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
-        AnalyzeInboxFragment.OnFragmentInteractionListener {
+        AnalyzeInboxFragment.OnFragmentInteractionListener,
+        ReportChooseDialog.OnFragmentInteractionListener {
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
-    private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
+    private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
     private static final String TAG_SMS_LIST = "sms_list";
+    private static final String TAG_REPORT_CHOICE_DIALOG = "report_choice";
     private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
-
-    public boolean isTaskSuccessful() {
-        return mTaskSuccessful;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +98,8 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO handle report saving
+                ReportChooseDialog dialog = ReportChooseDialog.newInstance();
+                dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
             }
         });
     }
@@ -144,52 +146,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void registerReceiveSmsListener(Activity activity) {
-        SmsIntentService.startActionSetListener(activity, mReceiver);
-    }
-
-    private boolean hasPermissionReceiveSms(){
-        int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS);
-        return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
-    }
-
-    private boolean hasPermissionReadSms(){
-        int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
-        return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
-    }
-
-    @Override
-    public void onPermissionExplanationDismiss(int requestCode) {
-        switch (requestCode){
-            case REQUEST_CODE_PERMISSION_RECEIVE_SMS:
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
-                break;
-            case REQUEST_CODE_PERMISSION_READ_SMS:
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_SMS}, REQUEST_CODE_PERMISSION_READ_SMS);
-                break;
-        }
-    }
-
-    public boolean sendSmscReport(SmsBriefData data) {
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        // default mcc and mnc
-        String mSimOperator = UNKNOWN_MCC_MNC;
-        if (manager != null) {
-            mSimOperator = manager.getSimOperator();
-        }
-        Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).push().setValue(data.getSmsc());
-        task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                mTaskSuccessful = task.isSuccessful();
-                Log.d("test", String.format("Task %s completed, %s.", task.toString(), task.isSuccessful() ? "success" : "failure"));
-            }
-        });
-        return false;
-    }
+    // callback methods
 
     @Override
     public void onInboxAnalyzeRequested(long selectionPeriod) {
@@ -211,6 +168,77 @@ public class MainActivity extends AppCompatActivity
                         new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
             }
         }
+    }
+
+    @Override
+    public void onPermissionExplanationDismiss(int requestCode) {
+        switch (requestCode){
+            case REQUEST_CODE_PERMISSION_RECEIVE_SMS:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
+                break;
+            case REQUEST_CODE_PERMISSION_READ_SMS:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_SMS}, REQUEST_CODE_PERMISSION_READ_SMS);
+                break;
+        }
+    }
+
+    @Override
+    public void onPushReportRequested() {
+        ArrayList<SmsBriefData> smsList = null;
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
+        if (fragment != null && fragment instanceof SmsListFragment) {
+            smsList = ((SmsListFragment) fragment).getSmsBriefDataList();
+            for (SmsBriefData smsBriefData: smsList){
+                sendSmscReport(smsBriefData);
+            }
+        }
+        // TODO: handle error
+    }
+
+    @Override
+    public void onCSVReportRequested() {
+
+    }
+
+    // util methods
+
+    public boolean isTaskSuccessful() {
+        return mTaskSuccessful;
+    }
+
+    private void registerReceiveSmsListener(Activity activity) {
+        SmsIntentService.startActionSetListener(activity, mReceiver);
+    }
+
+    private boolean hasPermissionReceiveSms(){
+        int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS);
+        return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
+    }
+
+    private boolean hasPermissionReadSms(){
+        int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
+        return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
+    }
+
+    public boolean sendSmscReport(SmsBriefData data) {
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        // default mcc and mnc
+        String mSimOperator = UNKNOWN_MCC_MNC;
+        if (manager != null) {
+            mSimOperator = manager.getSimOperator();
+        }
+        Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).push().setValue(data.getSmsc());
+        task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                mTaskSuccessful = task.isSuccessful();
+                Log.d("test", String.format("Task %s completed, %s.", task.toString(), task.isSuccessful() ? "success" : "failure"));
+            }
+        });
+        return false;
     }
 
     private void replaceFragmentSmsList() {
