@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
@@ -186,15 +187,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPushReportRequested() {
-        ArrayList<SmsBriefData> smsList = null;
+        ArrayList<SmsBriefData> smsList;
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
         if (fragment != null && fragment instanceof SmsListFragment) {
             smsList = ((SmsListFragment) fragment).getSmsBriefDataList();
             for (SmsBriefData smsBriefData: smsList){
                 sendSmscReport(smsBriefData);
             }
+        } else {
+            Toast.makeText(this, R.string.hint_no_sms_chosen, Toast.LENGTH_SHORT).show();
         }
-        // TODO: handle error
     }
 
     @Override

@@ -18,6 +18,10 @@
     <string name="placeholder_sms_text">SMS Text</string>
     <string name="choose_push">Push</string>
     <string name="choose_csv">CSV</string>
-    <string name="report_choice_explanation">How to make a report: send SMSC address over push (requires Internet) or construct a CSV document (requires permission to write data to your storage)?</string>
+    <string name="report_choice_explanation">Send SMSC address over push
+        \n(requires Internet)
+        \nor construct a CSV document
+        \n(requires permission to write data to your storage)?</string>
+    <string name="hint_no_sms_chosen">Choose SMS for the report first!</string>
 
 </resources>
