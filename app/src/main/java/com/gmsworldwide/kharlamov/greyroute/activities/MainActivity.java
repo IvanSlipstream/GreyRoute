@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity
         ReportChooseDialog.OnFragmentInteractionListener {
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
-    private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
+    private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
     private static final String TAG_SMS_LIST = "sms_list";
@@ -67,6 +67,27 @@ public class MainActivity extends AppCompatActivity
         }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         mSwRegisterReceiver = (Switch) findViewById(R.id.sw_register_receiver);
+
+        setSupportActionBar(toolbar);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ReportChooseDialog dialog = ReportChooseDialog.newInstance();
+                dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
+            }
+        });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         mSwRegisterReceiver.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -94,26 +115,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-        setSupportActionBar(toolbar);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ReportChooseDialog dialog = ReportChooseDialog.newInstance();
-                dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
-            }
-        });
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
         mReceiver = new ResultReceiver(new Handler()){
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
