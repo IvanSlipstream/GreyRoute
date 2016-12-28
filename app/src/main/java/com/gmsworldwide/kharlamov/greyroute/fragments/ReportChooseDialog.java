@@ -78,6 +78,7 @@ public class ReportChooseDialog extends DialogFragment implements View.OnClickLi
                 if (mListener != null) {
                     mListener.onCSVReportRequested();
                 }
+                dismiss();
                 break;
             case R.id.btn_report_choice_push:
                 if (mListener != null) {

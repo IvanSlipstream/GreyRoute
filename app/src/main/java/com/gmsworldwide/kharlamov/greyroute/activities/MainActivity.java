@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
+    private static final int REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE = 3;
     private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
@@ -145,6 +146,11 @@ public class MainActivity extends AppCompatActivity
                     replaceFragmentSmsList();
                 }
                 break;
+            case REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE:
+                if (isPermissionGranted) {
+                    writeReportCSV();
+                }
+                break;
         }
     }
 
@@ -202,7 +208,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onCSVReportRequested() {
-
+        if (hasPermissionWriteExternalStorage()){
+            writeReportCSV();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE);
+            // no need to explain permission to the user
+            // as we already have a callback from a fragment explaining it
+        }
     }
 
     // util methods
@@ -222,6 +235,11 @@ public class MainActivity extends AppCompatActivity
 
     private boolean hasPermissionReadSms(){
         int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
+        return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
+    }
+
+    private boolean hasPermissionWriteExternalStorage(){
+        int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
     }
 
@@ -250,5 +268,9 @@ public class MainActivity extends AppCompatActivity
                 .addToBackStack(TAG_ANALYSIS_FORM)
                 .replace(R.id.fl_fragment_container, SmsListFragment.newInstance(mSelectionPeriod), TAG_SMS_LIST)
                 .commit();
+    }
+
+    private void writeReportCSV() {
+        // TODO create report file
     }
 }
