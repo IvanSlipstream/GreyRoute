@@ -4,14 +4,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -34,12 +35,21 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
         AnalyzeInboxFragment.OnFragmentInteractionListener,
-        ReportChooseDialog.OnFragmentInteractionListener {
+        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
+
+    public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
@@ -59,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fl_fragment_container, AnalyzeInboxFragment.newInstance(), TAG_ANALYSIS_FORM)
@@ -197,7 +208,7 @@ public class MainActivity extends AppCompatActivity
         ArrayList<SmsBriefData> smsList;
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
         if (fragment != null && fragment instanceof SmsListFragment) {
-            smsList = ((SmsListFragment) fragment).getSmsBriefDataList();
+            smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
             for (SmsBriefData smsBriefData: smsList){
                 sendSmscReport(smsBriefData);
             }
@@ -215,6 +226,21 @@ public class MainActivity extends AppCompatActivity
                     REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE);
             // no need to explain permission to the user
             // as we already have a callback from a fragment explaining it
+        }
+    }
+
+    @Override
+    public void onBackStackChanged() {
+        // show or hide our FAB depending on SmsListFragment visible or not
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        if (fab == null) {
+            return;
+        }
+        if (fragment != null && fragment.isVisible() && fragment.isResumed()) {
+            fab.setVisibility(View.VISIBLE);
+        } else {
+            fab.setVisibility(View.GONE);
         }
     }
 
@@ -270,7 +296,34 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    private void writeReportCSV() {
-        // TODO create report file
+    private boolean writeReportCSV() {
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        ArrayList<SmsBriefData> smsList;
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
+        if (fragment != null && fragment instanceof SmsListFragment) {
+            smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
+        } else {
+            Toast.makeText(this, R.string.hint_no_sms_chosen, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Calendar.getInstance().getTime());
+        String fileName = String.format("report_%s.csv", timeStamp);
+        File reportFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+        try {
+            FileOutputStream fos = new FileOutputStream(reportFile);
+            fos.write((CSV_REPORT_HEADER+"").getBytes("utf-8"));
+            for (SmsBriefData smsBriefData: smsList) {
+                fos.write(String.format("%s;%s;%s\r\n", smsBriefData.getSmsc(), smsBriefData.getTpOa(), smsBriefData.getText()).getBytes("utf-8"));
+            }
+            fos.close();
+            Log.d("test", "writeReportCSV: done "+reportFile.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

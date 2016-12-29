@@ -101,7 +101,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    public ArrayList<SmsBriefData> getSmsBriefDataList(){
+    public ArrayList<SmsBriefData> getCheckedSmsBriefDataList(){
         ArrayList<SmsBriefData> result = new ArrayList<>();
         ArrayList<SmsBriefData> localList = adapter.getSmsBriefDataList();
         if (adapter != null) {
