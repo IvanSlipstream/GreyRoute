@@ -25,5 +25,8 @@
     <string name="hint_no_sms_chosen">Choose SMS for the report first!</string>
     <string name="analyze_incoming_sms">Analyze Incoming SMS</string>
     <string name="error_no_external_storage">Cannot access external storage</string>
+    <string name="file_saved">File %s saved to your Downloads folder.</string>
+    <string name="push_sent_success">Report was successfully sent through push.</string>
+    <string name="push_sent_failure">Failed to send push report.</string>
 
 </resources>

@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity
         AnalyzeInboxFragment.OnFragmentInteractionListener,
         ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
 
-    public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text";
+    public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
@@ -283,9 +283,20 @@ public class MainActivity extends AppCompatActivity
             public void onComplete(@NonNull Task<Void> task) {
                 mTaskSuccessful = task.isSuccessful();
                 Log.d("test", String.format("Task %s completed, %s.", task.toString(), task.isSuccessful() ? "success" : "failure"));
+                showPushResult(mTaskSuccessful);
             }
         });
         return false;
+    }
+
+
+    private void showPushResult(boolean success) {
+        int resId = success ? R.string.push_sent_success : R.string.push_sent_failure;
+        Toast.makeText(this, getResources().getString(resId), Toast.LENGTH_SHORT).show();
+    }
+
+    private void showCSVReportResult(String reportFileName) {
+        Toast.makeText(this, getResources().getString(R.string.file_saved, reportFileName), Toast.LENGTH_SHORT).show();
     }
 
     private void replaceFragmentSmsList() {
@@ -314,12 +325,13 @@ public class MainActivity extends AppCompatActivity
         File reportFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
         try {
             FileOutputStream fos = new FileOutputStream(reportFile);
-            fos.write((CSV_REPORT_HEADER+"").getBytes("utf-8"));
+            fos.write(CSV_REPORT_HEADER.getBytes("utf-8"));
             for (SmsBriefData smsBriefData: smsList) {
                 fos.write(String.format("%s;%s;%s\r\n", smsBriefData.getSmsc(), smsBriefData.getTpOa(), smsBriefData.getText()).getBytes("utf-8"));
             }
             fos.close();
             Log.d("test", "writeReportCSV: done "+reportFile.getAbsolutePath());
+            showCSVReportResult(reportFile.getName());
         } catch (IOException e) {
             e.printStackTrace();
             return false;
