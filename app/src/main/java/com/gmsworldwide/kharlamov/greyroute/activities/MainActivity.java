@@ -237,10 +237,15 @@ public class MainActivity extends AppCompatActivity
         if (fab == null) {
             return;
         }
-        if (fragment != null && fragment.isVisible() && fragment.isResumed()) {
+        if (isFragmentOnTop(fragment)) {
             fab.setVisibility(View.VISIBLE);
+            setTitle(R.string.app_name);
         } else {
             fab.setVisibility(View.GONE);
+            fragment = getSupportFragmentManager().findFragmentByTag(TAG_ANALYSIS_FORM);
+            if (isFragmentOnTop(fragment)) {
+                setTitle(R.string.title_analyze_inbox);
+            }
         }
     }
 
@@ -248,6 +253,10 @@ public class MainActivity extends AppCompatActivity
 
     public boolean isTaskSuccessful() {
         return mTaskSuccessful;
+    }
+
+    private boolean isFragmentOnTop(Fragment fragment) {
+        return fragment != null && fragment.isVisible() && fragment.isResumed();
     }
 
     private void registerReceiveSmsListener(Activity activity) {
