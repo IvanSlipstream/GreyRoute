@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -312,11 +313,11 @@ public class MainActivity extends AppCompatActivity
 
     private void showPushResult(boolean success) {
         int resId = success ? R.string.push_sent_success : R.string.push_sent_failure;
-        Toast.makeText(this, getResources().getString(resId), Toast.LENGTH_SHORT).show();
+        Snackbar.make(findViewById(R.id.cl_main), getResources().getString(resId), Snackbar.LENGTH_LONG).show();
     }
 
     private void showCSVReportResult(String reportFileName) {
-        Toast.makeText(this, getResources().getString(R.string.file_saved, reportFileName), Toast.LENGTH_SHORT).show();
+        Snackbar.make(findViewById(R.id.cl_main), getResources().getString(R.string.file_saved, reportFileName), Snackbar.LENGTH_LONG).show();
     }
 
     private void replaceFragmentSmsList() {
