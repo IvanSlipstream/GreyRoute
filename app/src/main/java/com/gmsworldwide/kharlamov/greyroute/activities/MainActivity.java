@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onInboxAnalyzeFragmentResumed(){
-        setTitle(R.string.analyze_incoming_sms);
+        setTitle(R.string.title_analyze_inbox);
     }
 
     @Override
