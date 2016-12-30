@@ -133,7 +133,7 @@ public class AnalyzeInboxFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (outState != null) {
+        if (outState != null && mSbPeriod != null) {
             outState.putInt(RETAIN_INSTANCE_SB_POSITION, mSbPeriod.getVerticalScrollbarPosition());
         }
     }
