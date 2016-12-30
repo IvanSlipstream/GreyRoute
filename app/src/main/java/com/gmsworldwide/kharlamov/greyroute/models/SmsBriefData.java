@@ -1,11 +1,8 @@
 package com.gmsworldwide.kharlamov.greyroute.models;
 
 import android.database.Cursor;
-import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 
 /**
  * Created by Slipstream on 30.07.2016.

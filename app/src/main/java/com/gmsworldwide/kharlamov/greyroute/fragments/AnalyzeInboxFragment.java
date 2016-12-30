@@ -19,10 +19,10 @@ import static android.app.AlarmManager.INTERVAL_HOUR;
 
 public class AnalyzeInboxFragment extends Fragment {
 
-    public static final int SEEK_POSITION_LAST_HOUR = 0;
-    public static final int SEEK_POSITION_TODAY = 1;
-    public static final int SEEK_POSITION_LAST_WEEK = 2;
-    public static final int SEEK_POSITION_LIFETIME = 3;
+    private static final int SEEK_POSITION_LAST_HOUR = 0;
+    private static final int SEEK_POSITION_TODAY = 1;
+    private static final int SEEK_POSITION_LAST_WEEK = 2;
+    private static final int SEEK_POSITION_LIFETIME = 3;
     private static final String RETAIN_INSTANCE_SB_POSITION = "scroll_bar_position";
 
     private OnFragmentInteractionListener mListener;
@@ -119,6 +119,12 @@ public class AnalyzeInboxFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mListener.onInboxAnalyzeFragmentResumed();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
@@ -134,6 +140,7 @@ public class AnalyzeInboxFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onInboxAnalyzeRequested(long seconds);
+        void onInboxAnalyzeFragmentResumed();
     }
 
     private long getDefaultSelectionPeriod() {

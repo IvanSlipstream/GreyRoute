@@ -1,9 +1,6 @@
 package com.gmsworldwide.kharlamov.greyroute.fragments;
 
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -28,9 +25,9 @@ import java.util.Locale;
 
 public class SmsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<SmsBriefData>> {
 
-    public static final Uri URI_SMS_INBOX = Uri.parse("content://sms/inbox");
-    public static final String INBOX_SORT_ORDER = "date desc";
-    public static final String INBOX_DATE_FIELD = "date";
+    private static final Uri URI_SMS_INBOX = Uri.parse("content://sms/inbox");
+    private static final String INBOX_SORT_ORDER = "date desc";
+    private static final String INBOX_DATE_FIELD = "date";
 
     private static final int LOADER_ID_INBOX = 1;
     private static final String RETAIN_INSTANCE_KEY_CHECKED_LIST = "checked_list";

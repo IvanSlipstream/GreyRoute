@@ -16,7 +16,7 @@ public class SmsIntentService extends IntentService {
     private static final String EXTRA_LISTENER = "com.gmsworldwide.kharlamov.greyroute.extra.LISTENER";
     private static final String EXTRA_SMS = "com.gmsworldwide.kharlamov.greyroute.extra.SMS";
 
-    public static final String PDU_KEY = "pdus";
+    private static final String PDU_KEY = "pdus";
     public static final String SMS_KEY = "sms";
     public static final int RESULT_CODE_NEW_SMS = 1;
 

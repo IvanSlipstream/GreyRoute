@@ -1,8 +1,6 @@
 package com.gmsworldwide.kharlamov.greyroute;
 
-import android.app.Application;
 import android.test.ActivityInstrumentationTestCase2;
-import android.test.ApplicationTestCase;
 
 import com.gmsworldwide.kharlamov.greyroute.activities.MainActivity;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;

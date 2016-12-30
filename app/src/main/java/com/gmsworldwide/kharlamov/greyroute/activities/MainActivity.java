@@ -35,10 +35,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -187,6 +188,7 @@ public class MainActivity extends AppCompatActivity
                         new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
             }
         }
+        setTitle(R.string.app_name);
     }
 
     @Override
@@ -230,6 +232,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onInboxAnalyzeFragmentResumed(){
+        setTitle(R.string.analyze_incoming_sms);
+    }
+
+    @Override
     public void onBackStackChanged() {
         // show or hide our FAB depending on SmsListFragment visible or not
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
@@ -239,13 +246,8 @@ public class MainActivity extends AppCompatActivity
         }
         if (isFragmentOnTop(fragment)) {
             fab.setVisibility(View.VISIBLE);
-            setTitle(R.string.app_name);
         } else {
             fab.setVisibility(View.GONE);
-            fragment = getSupportFragmentManager().findFragmentByTag(TAG_ANALYSIS_FORM);
-            if (isFragmentOnTop(fragment)) {
-                setTitle(R.string.title_analyze_inbox);
-            }
         }
     }
 
@@ -255,6 +257,7 @@ public class MainActivity extends AppCompatActivity
         return mTaskSuccessful;
     }
 
+    @Contract("null -> false")
     private boolean isFragmentOnTop(Fragment fragment) {
         return fragment != null && fragment.isVisible() && fragment.isResumed();
     }
