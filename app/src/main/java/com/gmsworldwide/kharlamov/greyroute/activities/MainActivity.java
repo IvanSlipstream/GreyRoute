@@ -61,10 +61,12 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG_SMS_LIST = "sms_list";
     private static final String TAG_REPORT_CHOICE_DIALOG = "report_choice";
     private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
+    private static final String RETAIN_INSTANCE_KEY_FAB_VISIBILITY = "fab_visible";
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
+    private boolean mFabVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,12 +79,14 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         } else {
             mSelectionPeriod = savedInstanceState.getLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, 0);
+            mFabVisible = savedInstanceState.getBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, true);
         }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         mSwRegisterReceiver = (Switch) findViewById(R.id.sw_register_receiver);
 
         setSupportActionBar(toolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setVisibility(mFabVisible ? View.VISIBLE : View.GONE);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -96,6 +100,7 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
+        outState.putBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, mFabVisible);
     }
 
     @Override
@@ -246,8 +251,10 @@ public class MainActivity extends AppCompatActivity
         }
         if (isFragmentOnTop(fragment)) {
             fab.setVisibility(View.VISIBLE);
+            mFabVisible = true;
         } else {
             fab.setVisibility(View.GONE);
+            mFabVisible = false;
         }
     }
 
