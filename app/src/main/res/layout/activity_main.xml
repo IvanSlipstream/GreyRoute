@@ -27,7 +27,12 @@
         android:layout_height="wrap_content"
         android:text="@string/analyze_incoming_sms"
         android:layout_gravity="top|start"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin" />
 
     <Switch
         android:id="@+id/sw_register_receiver"

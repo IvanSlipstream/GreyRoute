@@ -16,7 +16,7 @@
     <string name="placeholder_sms_text" translatable="false">SMS Text</string>
     <string name="choose_push" translatable="false">Push</string>
     <string name="choose_csv" translatable="false">CSV</string>
-    <string name="report_choice_explanation">Send SMSC address over push\n(requires Internet)\nor construct a CSV document\n(requires permission to write data to your storage)?</string>
+    <string name="report_choice_explanation">Send SMSC address over push (requires Internet)\nor construct a CSV document (requires permission to write data to your phone storage)?</string>
     <string name="hint_no_sms_chosen">Choose SMS for the report first!</string>
     <string name="analyze_incoming_sms">Analyze Incoming SMS</string>
     <string name="error_no_external_storage">Cannot access external storage</string>
@@ -24,5 +24,7 @@
     <string name="push_sent_success">Report was successfully sent through push.</string>
     <string name="push_sent_failure">Failed to send push report.</string>
     <string name="title_analyze_inbox">Inspect your SMS Inbox</string>
+    <string name="report_selection_hint_header">Send a report</string>
+    <string name="accept">OK</string>
 
 </resources>

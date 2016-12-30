@@ -282,6 +282,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public boolean sendSmscReport(SmsBriefData data) {
+        // TODO make async
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         // default mcc and mnc
@@ -320,6 +321,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private boolean writeReportCSV() {
+        // TODO make async
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
             return false;
@@ -339,7 +341,8 @@ public class MainActivity extends AppCompatActivity
             FileOutputStream fos = new FileOutputStream(reportFile);
             fos.write(CSV_REPORT_HEADER.getBytes("utf-8"));
             for (SmsBriefData smsBriefData: smsList) {
-                fos.write(String.format("%s;%s;%s\r\n", smsBriefData.getSmsc(), smsBriefData.getTpOa(), smsBriefData.getText()).getBytes("utf-8"));
+                fos.write(String.format("%s;%s;%s\r\n", smsBriefData.getSmsc(),
+                        smsBriefData.getTpOa(), smsBriefData.getText().replaceAll("\\s", " ")).getBytes("utf-8"));
             }
             fos.close();
             Log.d("test", "writeReportCSV: done "+reportFile.getAbsolutePath());

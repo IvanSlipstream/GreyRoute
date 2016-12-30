@@ -19,6 +19,8 @@
         android:id="@+id/btn_dialog_dismiss"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/dismiss"/>
+        android:text="@string/accept"
+        android:layout_gravity="end"
+        style="?android:attr/buttonBarButtonStyle"/>
 
 </LinearLayout>

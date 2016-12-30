@@ -20,4 +20,6 @@
     <string name="push_sent_success">Отчет успешно отправлен через Push.</string>
     <string name="title_analyze_inbox">Проверять входящие SMS</string>
     <string name="report_choice_explanation">Отправить адреса SMSC через Push\n(требуется Интернет подключение)\nили создать документ CSV\n(требуется разрешение записи на внешний носитель)?</string>
+    <string name="report_selection_hint_header">Отправить отчет</string>
+    <string name="accept">OK</string>
 </resources>
