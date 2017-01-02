@@ -51,12 +51,12 @@ public class MainActivity extends AppCompatActivity
         AnalyzeInboxFragment.OnFragmentInteractionListener,
         ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
 
+    public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
     private static final int REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE = 3;
-    private static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
     private static final String TAG_SMS_LIST = "sms_list";
@@ -290,7 +290,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public boolean sendSmscReport(SmsBriefData data) {
-        // TODO make async
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         // default mcc and mnc
@@ -328,11 +327,10 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    private boolean writeReportCSV() {
-        // TODO make async
+    private void writeReportCSV() {
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
-            return false;
+            return;
         }
         ArrayList<SmsBriefData> smsList;
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
@@ -340,25 +338,20 @@ public class MainActivity extends AppCompatActivity
             smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
         } else {
             Toast.makeText(this, R.string.hint_no_sms_chosen, Toast.LENGTH_SHORT).show();
-            return false;
+            return;
         }
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Calendar.getInstance().getTime());
-        String fileName = String.format("report_%s.csv", timeStamp);
-        File reportFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
-        try {
-            FileOutputStream fos = new FileOutputStream(reportFile);
-            fos.write(CSV_REPORT_HEADER.getBytes("utf-8"));
-            for (SmsBriefData smsBriefData: smsList) {
-                fos.write(String.format("%s;%s;%s\r\n", smsBriefData.getSmsc(),
-                        smsBriefData.getTpOa(), smsBriefData.getText().replaceAll("\\s", " ")).getBytes("utf-8"));
+        ResultReceiver receiver = new ResultReceiver(new Handler()){
+            @Override
+            protected void onReceiveResult(int resultCode, Bundle resultData) {
+                switch (resultCode){
+                    case SmsIntentService.RESULT_CODE_FAILURE:
+                        break;
+                    case SmsIntentService.RESULT_CODE_CSV_SAVED:
+                        showCSVReportResult(resultData.getString(SmsIntentService.FILE_NAME_KEY));
+                        break;
+                }
             }
-            fos.close();
-            Log.d("test", "writeReportCSV: done "+reportFile.getAbsolutePath());
-            showCSVReportResult(reportFile.getName());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+        };
+        SmsIntentService.startActionMakeCSVReport(this, smsList, receiver);
     }
 }
