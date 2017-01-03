@@ -3,7 +3,7 @@
     <string name="app_name">SMSC Inspector</string>
     <string name="action_settings">Настройки</string>
     <string name="analyze">Анализировать</string>
-    <string name="analyze_incoming_sms">Анализировать новые SMS</string>
+    <string name="analyze_incoming_sms">Анализ новых SMS</string>
     <string name="broadcast_sms_explanation">Вы активировали анализ получаемых SMS.\nДля этого необходимо разрешение на прочтение входящих SMS.</string>
     <string name="choose_period_to_analyze">Выберите период для анализа</string>
     <string name="date_range">Временной промежуток</string>

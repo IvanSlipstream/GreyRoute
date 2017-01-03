@@ -7,17 +7,18 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 
 /**
  * Created by Slipstream on 09.12.2016 in GreyRoute.
  */
-public class SwitchFrameLayoutBehavior extends CoordinatorLayout.Behavior<FrameLayout> {
+public class TextViewFrameLayoutBehavior extends CoordinatorLayout.Behavior<FrameLayout> {
     @Override
     public boolean layoutDependsOn(CoordinatorLayout parent, FrameLayout child, View dependency) {
-        return (dependency instanceof Switch) || (dependency instanceof AppBarLayout);
+        return (dependency instanceof TextView) || (dependency instanceof AppBarLayout);
     }
 
-    public SwitchFrameLayoutBehavior(Context context, AttributeSet attrs) {
+    public TextViewFrameLayoutBehavior(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
