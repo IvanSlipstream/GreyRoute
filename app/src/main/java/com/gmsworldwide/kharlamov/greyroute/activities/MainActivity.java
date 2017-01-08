@@ -38,13 +38,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import org.jetbrains.annotations.Contract;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
@@ -63,6 +57,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG_REPORT_CHOICE_DIALOG = "report_choice";
     private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
     private static final String RETAIN_INSTANCE_KEY_FAB_VISIBILITY = "fab_visible";
+    private static final byte CAUSE_NO_SMS_CHOSEN = 1;
     private Switch mSwRegisterReceiver;
     private ResultReceiver mReceiver;
     protected boolean mTaskSuccessful = false;
@@ -217,11 +212,15 @@ public class MainActivity extends AppCompatActivity
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
         if (fragment != null && fragment instanceof SmsListFragment) {
             smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
+            if (smsList == null || smsList.size()==0) {
+                showReportFailure(CAUSE_NO_SMS_CHOSEN);
+                return;
+            }
             for (SmsBriefData smsBriefData: smsList){
                 sendSmscReport(smsBriefData);
             }
         } else {
-            Toast.makeText(this, R.string.hint_no_sms_chosen, Toast.LENGTH_SHORT).show();
+            showReportFailure(CAUSE_NO_SMS_CHOSEN);
         }
     }
 
@@ -319,6 +318,14 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(findViewById(R.id.cl_main), getResources().getString(R.string.file_saved, reportFileName), Snackbar.LENGTH_LONG).show();
     }
 
+    private void showReportFailure(int cause) {
+        switch (cause) {
+            case CAUSE_NO_SMS_CHOSEN:
+                Snackbar.make(findViewById(R.id.cl_main), R.string.hint_no_sms_chosen, Snackbar.LENGTH_LONG).show();
+                break;
+        }
+    }
+
     private void replaceFragmentSmsList() {
         // replace a fragment with SMS list fragment
         getSupportFragmentManager().beginTransaction()
@@ -336,8 +343,12 @@ public class MainActivity extends AppCompatActivity
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
         if (fragment != null && fragment instanceof SmsListFragment) {
             smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
+            if (smsList == null || smsList.size()==0){
+                showReportFailure(CAUSE_NO_SMS_CHOSEN);
+                return;
+            }
         } else {
-            Toast.makeText(this, R.string.hint_no_sms_chosen, Toast.LENGTH_SHORT).show();
+            showReportFailure(CAUSE_NO_SMS_CHOSEN);
             return;
         }
         ResultReceiver receiver = new ResultReceiver(new Handler()){
