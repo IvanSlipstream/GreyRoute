@@ -38,7 +38,10 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import org.jetbrains.annotations.Contract;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
@@ -291,12 +294,13 @@ public class MainActivity extends AppCompatActivity
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Calendar.getInstance().getTime());
         // default mcc and mnc
         String mSimOperator = UNKNOWN_MCC_MNC;
         if (manager != null) {
             mSimOperator = manager.getSimOperator();
         }
-        Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).push().setValue(data.getSmsc());
+        Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).child(data.getSmsc()).setValue(dateString);
         task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
