@@ -337,13 +337,13 @@ public class MainActivity extends AppCompatActivity
                 String mimeTypeString = mimeTypeMap.getMimeTypeFromExtension("csv");
                 File csvFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), reportFileName);
                 intent = new Intent(Intent.ACTION_VIEW);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    uri = FileProvider.getUriForFile(v.getContext(), BuildConfig.APPLICATION_ID + ".provider",
-                            csvFile);
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                } else {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                    uri = FileProvider.getUriForFile(v.getContext(), BuildConfig.APPLICATION_ID + ".provider",
+//                            csvFile);
+//                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                } else {
                     uri = Uri.fromFile(csvFile);
-                }
+//                }
                 intent.setDataAndType(uri, mimeTypeString);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 try {
