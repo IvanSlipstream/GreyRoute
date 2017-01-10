@@ -26,5 +26,7 @@
     <string name="title_analyze_inbox">Inspect your SMS Inbox</string>
     <string name="report_selection_hint_header">Create a report</string>
     <string name="accept">OK</string>
+    <string name="hint_open_csv">Open</string>
+    <string name="hint_no_csv_handler">No application to open CSV file</string>
 
 </resources>

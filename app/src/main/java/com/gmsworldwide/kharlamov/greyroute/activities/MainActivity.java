@@ -2,8 +2,12 @@ package com.gmsworldwide.kharlamov.greyroute.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -15,15 +19,18 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.gmsworldwide.kharlamov.greyroute.BuildConfig;
 import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
@@ -38,6 +45,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import org.jetbrains.annotations.Contract;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -318,8 +326,35 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(findViewById(R.id.cl_main), getResources().getString(resId), Snackbar.LENGTH_LONG).show();
     }
 
-    private void showCSVReportResult(String reportFileName) {
-        Snackbar.make(findViewById(R.id.cl_main), getResources().getString(R.string.file_saved, reportFileName), Snackbar.LENGTH_LONG).show();
+    private void showCSVReportResult(final String reportFileName) {
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.cl_main), getResources().getString(R.string.file_saved, reportFileName), Snackbar.LENGTH_LONG);
+        snackbar.setAction(R.string.hint_open_csv, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent;
+                Uri uri;
+                MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+                String mimeTypeString = mimeTypeMap.getMimeTypeFromExtension("csv");
+                File csvFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), reportFileName);
+                intent = new Intent(Intent.ACTION_VIEW);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    uri = FileProvider.getUriForFile(v.getContext(), BuildConfig.APPLICATION_ID + ".provider",
+                            csvFile);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } else {
+                    uri = Uri.fromFile(csvFile);
+                }
+                intent.setDataAndType(uri, mimeTypeString);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(v.getContext(), R.string.hint_no_csv_handler, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+        snackbar.show();
+
     }
 
     private void showReportFailure(int cause) {

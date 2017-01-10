@@ -22,4 +22,6 @@
     <string name="report_choice_explanation">Отправить адреса SMSC через Push\n(требуется Интернет подключение)\nили создать документ CSV\n(требуется разрешение записи на внешний носитель)?</string>
     <string name="report_selection_hint_header">Создать отчет</string>
     <string name="accept">OK</string>
+    <string name="hint_open_csv">Открыть</string>
+    <string name="hint_no_csv_handler">Нет приложения для открытия CSV файла</string>
 </resources>
