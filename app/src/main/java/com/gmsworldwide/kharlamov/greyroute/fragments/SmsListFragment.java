@@ -215,10 +215,13 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     holder.mark(isChecked);
+                    int adapterPosition = holder.getAdapterPosition();
                     if (holder.isMarked()){
-                        mCheckedList.add(holder.getAdapterPosition());
+                        if (!mCheckedList.contains(adapterPosition)) {
+                            mCheckedList.add(adapterPosition);
+                        }
                     } else {
-                        mCheckedList.remove((Integer) holder.getAdapterPosition());
+                        mCheckedList.remove((Integer) adapterPosition);
                     }
                 }
             });
