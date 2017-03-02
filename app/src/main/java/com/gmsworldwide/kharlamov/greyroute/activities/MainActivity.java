@@ -43,8 +43,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import org.jetbrains.annotations.Contract;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -275,7 +273,6 @@ public class MainActivity extends AppCompatActivity
         return mTaskSuccessful;
     }
 
-    @Contract("null -> false")
     private boolean isFragmentOnTop(Fragment fragment) {
         return fragment != null && fragment.isVisible() && fragment.isResumed();
     }
@@ -301,6 +298,9 @@ public class MainActivity extends AppCompatActivity
 
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        if (mDatabase == null) {
+            showPushResult(false);
+        }
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Calendar.getInstance().getTime());
         // default mcc and mnc
@@ -364,7 +364,7 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager().beginTransaction()
                 .addToBackStack(TAG_ANALYSIS_FORM)
                 .replace(R.id.fl_fragment_container, SmsListFragment.newInstance(mSelectionPeriod), TAG_SMS_LIST)
-                .commit();
+                .commitAllowingStateLoss();
     }
 
     private void writeReportCSV() {
