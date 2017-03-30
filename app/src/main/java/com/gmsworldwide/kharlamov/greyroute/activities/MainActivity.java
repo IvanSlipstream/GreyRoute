@@ -300,6 +300,7 @@ public class MainActivity extends AppCompatActivity
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         if (mDatabase == null) {
             showPushResult(false);
+            return false;
         }
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Calendar.getInstance().getTime());
