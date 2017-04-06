@@ -7,7 +7,9 @@ import android.os.ResultReceiver;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.gmsworldwide.kharlamov.greyroute.activities.MainActivity;
+import com.gmsworldwide.kharlamov.greyroute.firebase.SmscDatabaseProcessor;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
+import com.gmsworldwide.kharlamov.greyroute.models.SmscMatch;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
@@ -65,6 +67,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 try {
+                    assertEquals(resultCode, SmsIntentService.RESULT_CODE_CSV_SAVED);
                     String fileName = resultData.getString(SmsIntentService.FILE_NAME_KEY);
                     assert fileName != null;
                     File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
@@ -87,5 +90,29 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
                 return completed[0];
             }
         }, 50000);
+    }
+
+    public void testMatchSmsc() throws Exception {
+        final String[] carrier = new String[1];
+        ResultReceiver receiver = new ResultReceiver(new Handler()){
+            @Override
+            protected void onReceiveResult(int resultCode, Bundle resultData) {
+                if (resultCode == SmscDatabaseProcessor.RESULT_CODE_MATCH) {
+                    SmscMatch match = resultData.getParcelable(SmscDatabaseProcessor.KEY_SMSC_MATCH);
+                    if (match != null) {
+                        carrier[0] = match.getCarrierName();
+                    }
+                }
+            }
+        };
+        solo.assertCurrentActivity("wrong activity", MainActivity.class);
+        SmscDatabaseProcessor processor = new SmscDatabaseProcessor(receiver);
+        processor.matchSmscAddress("+41415739999");
+        solo.waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return carrier[0] != null && carrier[0].equals("GMS Hub");
+            }
+        }, 10000);
     }
 }

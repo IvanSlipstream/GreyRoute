@@ -9,6 +9,7 @@ import android.os.ResultReceiver;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import com.gmsworldwide.kharlamov.greyroute.firebase.SmscDatabaseProcessor;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 
 import java.io.File;
@@ -25,10 +26,12 @@ public class SmsIntentService extends IntentService {
     private static final String ACTION_RECEIVE_SMS = "com.gmsworldwide.kharlamov.greyroute.action.RECEIVE_SMS";
     private static final String ACTION_SET_LISTENER = "com.gmsworldwide.kharlamov.greyroute.action.SET_LISTENER";
     private static final String ACTION_MAKE_CSV_REPORT = "com.gmsworldwide.kharlamov.greyroute.action.MAKE_CSV_REPORT";
+    private static final String ACTION_MATCH_SMSC = "com.gmsworldwide.kharlamov.greyroute.action.MATCH_SMSC";
 
     private static final String EXTRA_LISTENER = "com.gmsworldwide.kharlamov.greyroute.extra.LISTENER";
     private static final String EXTRA_SMS = "com.gmsworldwide.kharlamov.greyroute.extra.SMS";
     private static final String EXTRA_SMS_LIST = "com.gmsworldwide.kharlamov.greyroute.extra.SMS_LIST";
+    private static final String EXTRA_SMSC_ADDRESS = "com.gmsworldwide.kharlamov.greyroute.extra.SMSC";
 
     private static final String PDU_KEY = "pdus";
     public static final String SMS_KEY = "sms";
@@ -36,6 +39,7 @@ public class SmsIntentService extends IntentService {
     public static final int RESULT_CODE_FAILURE = -1;
     public static final int RESULT_CODE_NEW_SMS = 1;
     public static final int RESULT_CODE_CSV_SAVED = 2;
+
 
     public SmsIntentService() {
         super("SmsIntentService");
@@ -63,6 +67,14 @@ public class SmsIntentService extends IntentService {
         context.startService(intent);
     }
 
+    public static void startActionReceiveSms(Context context, String smscAddress, ResultReceiver receiver) {
+        Intent intent = new Intent(context, SmsIntentService.class);
+        intent.setAction(ACTION_RECEIVE_SMS);
+        intent.putExtra(EXTRA_SMSC_ADDRESS, smscAddress);
+        intent.putExtra(EXTRA_LISTENER, receiver);
+        context.startService(intent);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
@@ -81,6 +93,10 @@ public class SmsIntentService extends IntentService {
                     ArrayList<SmsBriefData> smsList = intent.getParcelableArrayListExtra(EXTRA_SMS_LIST);
                     handleActionMakeCSVReport(smsList, csvResultReceiver);
                     break;
+                case ACTION_MATCH_SMSC:
+                    final ResultReceiver matchResultReceiver = intent.getParcelableExtra(EXTRA_LISTENER);
+                    String smsc = intent.getStringExtra(EXTRA_SMSC_ADDRESS);
+                    handleActionMatchSmsc(smsc, matchResultReceiver);
             }
         }
     }
@@ -127,6 +143,11 @@ public class SmsIntentService extends IntentService {
             e.printStackTrace();
             receiver.send(RESULT_CODE_FAILURE, null);
         }
+    }
+
+    private void handleActionMatchSmsc(String smsc, ResultReceiver matchResultReceiver) {
+        SmscDatabaseProcessor processor = new SmscDatabaseProcessor(matchResultReceiver);
+        processor.matchSmscAddress(smsc);
     }
 
     public static class SmsReceiverContext {
