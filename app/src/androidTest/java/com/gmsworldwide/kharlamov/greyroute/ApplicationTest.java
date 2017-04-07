@@ -93,26 +93,30 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
     }
 
     public void testMatchSmsc() throws Exception {
-        final String[] carrier = new String[1];
-        ResultReceiver receiver = new ResultReceiver(new Handler()){
+        final ArrayList<String> carriers = new ArrayList<>();
+        ResultReceiver receiver = new ResultReceiver(new Handler(getActivity().getMainLooper())){
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 if (resultCode == SmscDatabaseProcessor.RESULT_CODE_MATCH) {
                     SmscMatch match = resultData.getParcelable(SmscDatabaseProcessor.KEY_SMSC_MATCH);
                     if (match != null) {
-                        carrier[0] = match.getCarrierName();
+                        carriers.add(match.getCarrierName());
                     }
                 }
             }
         };
         solo.assertCurrentActivity("wrong activity", MainActivity.class);
         SmscDatabaseProcessor processor = new SmscDatabaseProcessor(receiver);
-        processor.matchSmscAddress("+41415739999");
+        processor.matchSmscAddress(new String[]{"+41415739999", "+346070080100500", "+338141050666", "+1005006661488"});
         solo.waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                return carrier[0] != null && carrier[0].equals("GMS Hub");
+                return carriers.size() == 3;
             }
-        }, 10000);
+        }, 5000);
+        assertEquals(carriers.size(), 3);
+        for (String carrier: carriers) {
+            assertTrue(carrier.equals("Vodafone Hub") || carrier.equals("SAP Hub") || carrier.equals("GMS Hub"));
+        }
     }
 }

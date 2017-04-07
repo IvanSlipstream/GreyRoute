@@ -172,7 +172,8 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
             return mMarked;
         }
     }
-    public class SmsListAdapter extends RecyclerView.Adapter<SmsHolder> {
+
+    private class SmsListAdapter extends RecyclerView.Adapter<SmsHolder> {
 
         private ArrayList<SmsBriefData> mSmsBriefDataList;
         private ArrayList<Integer> mCheckedList;

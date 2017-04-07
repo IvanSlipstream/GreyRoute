@@ -12,6 +12,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 /**
  * Created by Slipstream on 30.03.2017 in GreyRoute.
  */
@@ -30,6 +32,37 @@ public class SmscDatabaseProcessor {
     public SmscDatabaseProcessor(@NonNull ResultReceiver receiver) {
         this.mReference = FirebaseDatabase.getInstance().getReference();
         this.mReceiver = receiver;
+    }
+
+    /**
+     * Matches given SMSC addresses against patterns in database.
+     * Result is sent over receiver.
+     * @param smscs array of SMSC addresses
+     */
+    public void matchSmscAddress (final String[] smscs) {
+        mReference.child("aggregator_smsc").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot smscPattern: dataSnapshot.getChildren()){
+                    for (String smsc: smscs){
+                        if (smsc.startsWith(smscPattern.getKey())) {
+                            SmscMatch match = new SmscMatch(smscPattern.getKey().length(), smscPattern.getValue().toString(), smsc);
+                            Bundle bundle = new Bundle();
+                            bundle.putParcelable(KEY_SMSC_MATCH, match);
+                            mReceiver.send(RESULT_CODE_MATCH, bundle);
+                            Log.d(LOG_TAG, match.toString());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Bundle bundle = new Bundle();
+                bundle.putString(KEY_DATABASE_ERROR, databaseError.getMessage());
+                mReceiver.send(RESULT_CODE_FAILURE, bundle);
+            }
+        });
     }
 
     public void matchSmscAddress (final String smsc) {
