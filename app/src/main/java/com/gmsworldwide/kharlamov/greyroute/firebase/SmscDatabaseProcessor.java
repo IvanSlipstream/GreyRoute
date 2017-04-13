@@ -5,14 +5,12 @@ import android.support.annotation.NonNull;
 import android.os.ResultReceiver;
 import android.util.Log;
 
-import com.gmsworldwide.kharlamov.greyroute.models.SmscMatch;
+import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
 
 /**
  * Created by Slipstream on 30.03.2017 in GreyRoute.
@@ -46,7 +44,7 @@ public class SmscDatabaseProcessor {
                 for (DataSnapshot smscPattern: dataSnapshot.getChildren()){
                     for (String smsc: smscs){
                         if (smsc.startsWith(smscPattern.getKey())) {
-                            SmscMatch match = new SmscMatch(smscPattern.getKey().length(), smscPattern.getValue().toString(), smsc);
+                            KnownSmsc match = new KnownSmsc(smscPattern.getKey().length(), smscPattern.getValue().toString(), smsc);
                             Bundle bundle = new Bundle();
                             bundle.putParcelable(KEY_SMSC_MATCH, match);
                             mReceiver.send(RESULT_CODE_MATCH, bundle);
@@ -66,14 +64,14 @@ public class SmscDatabaseProcessor {
     }
 
     public void matchSmscAddress (final String smsc) {
-        final SmscMatch match = new SmscMatch(0, null, smsc);
+        final KnownSmsc match = new KnownSmsc(0, null, smsc);
         mReference.child("aggregator_smsc").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Bundle bundle = new Bundle();
                 for (DataSnapshot smscPattern: dataSnapshot.getChildren()){
                     if (smsc.startsWith(smscPattern.getKey())) {
-                        SmscMatch newMatch = new SmscMatch(smscPattern.getKey().length(), smscPattern.getValue().toString(), smsc);
+                        KnownSmsc newMatch = new KnownSmsc(smscPattern.getKey().length(), smscPattern.getValue().toString(), smsc);
                         match.override(newMatch);
                     }
                 }

@@ -7,9 +7,7 @@ import android.os.ResultReceiver;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.gmsworldwide.kharlamov.greyroute.activities.MainActivity;
-import com.gmsworldwide.kharlamov.greyroute.firebase.SmscDatabaseProcessor;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
-import com.gmsworldwide.kharlamov.greyroute.models.SmscMatch;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
@@ -92,31 +90,4 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         }, 50000);
     }
 
-    public void testMatchSmsc() throws Exception {
-        final ArrayList<String> carriers = new ArrayList<>();
-        ResultReceiver receiver = new ResultReceiver(new Handler(getActivity().getMainLooper())){
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                if (resultCode == SmscDatabaseProcessor.RESULT_CODE_MATCH) {
-                    SmscMatch match = resultData.getParcelable(SmscDatabaseProcessor.KEY_SMSC_MATCH);
-                    if (match != null) {
-                        carriers.add(match.getCarrierName());
-                    }
-                }
-            }
-        };
-        solo.assertCurrentActivity("wrong activity", MainActivity.class);
-        SmscDatabaseProcessor processor = new SmscDatabaseProcessor(receiver);
-        processor.matchSmscAddress(new String[]{"+41415739999", "+346070080100500", "+338141050666", "+1005006661488"});
-        solo.waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                return carriers.size() == 3;
-            }
-        }, 5000);
-        assertEquals(carriers.size(), 3);
-        for (String carrier: carriers) {
-            assertTrue(carrier.equals("Vodafone Hub") || carrier.equals("SAP Hub") || carrier.equals("GMS Hub"));
-        }
-    }
 }

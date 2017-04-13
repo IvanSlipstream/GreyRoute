@@ -113,6 +113,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public Loader<ArrayList<SmsBriefData>> onCreateLoader(int id, Bundle args) {
+
         return new AsyncTaskLoader<ArrayList<SmsBriefData>>(getContext()) {
             @Override
             protected void onStartLoading() {
