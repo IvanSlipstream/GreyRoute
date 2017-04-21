@@ -1,12 +1,14 @@
 package com.gmsworldwide.kharlamov.greyroute.provider;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.gmsworldwide.kharlamov.greyroute.Manifest;
 import com.gmsworldwide.kharlamov.greyroute.db.DbHelper;
@@ -53,25 +55,46 @@ public class SmscContentProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public Cursor query(Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
-        // TODO: Implement this to handle query requests from clients.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
+    public Uri insert(@NonNull Uri uri, ContentValues values) {
         Context context = getContext();
-        int rows = mDatabaseWrite.update(DbHelper.KnownSmscFields.TABLE_NAME, values, selection, selectionArgs);
-        if (context != null) {
-            context.notify();
+        Uri notificationUri = null;
+        long id;
+        switch (sUriMatcher.match(uri)){
+            case CODE_KNOWN_SMSC:
+                id = mDatabaseWrite.insert(DbHelper.KnownSmscFields.TABLE_NAME, null, values);
+                notificationUri = ContentUris.withAppendedId(uri, id);
+                break;
+        }
+        if (context != null && notificationUri != null) {
+            context.getContentResolver().notifyChange(notificationUri, null);
+        }
+        return notificationUri;
+    }
+
+    @Override
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
+        Cursor c = null;
+        switch (sUriMatcher.match(uri)) {
+            case CODE_KNOWN_SMSC:
+                c = mDatabaseRead.query(DbHelper.KnownSmscFields.TABLE_NAME, projection, selection,
+                        selectionArgs, null, null, sortOrder);
+                break;
+        }
+        return c;
+    }
+
+    @Override
+    public int update(@NonNull Uri uri, ContentValues values, String selection,
+                      String[] selectionArgs) {
+        int rows = 0;
+        Context context = getContext();
+        switch (sUriMatcher.match(uri)){
+            case CODE_KNOWN_SMSC:
+                rows = mDatabaseWrite.update(DbHelper.KnownSmscFields.TABLE_NAME, values, selection, selectionArgs);
+        }
+        if (context != null && rows > 0) {
+            context.getContentResolver().notifyChange(uri, null);
         }
         return rows;
     }

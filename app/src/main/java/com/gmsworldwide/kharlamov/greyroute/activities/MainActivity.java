@@ -3,9 +3,11 @@ package com.gmsworldwide.kharlamov.greyroute.activities;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,11 +34,13 @@ import android.widget.Toast;
 
 import com.gmsworldwide.kharlamov.greyroute.BuildConfig;
 import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.firebase.FirebaseAdapter;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
 import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
+import com.gmsworldwide.kharlamov.greyroute.provider.SmscContentProvider;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -52,7 +56,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
         AnalyzeInboxFragment.OnFragmentInteractionListener,
-        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
+        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener,
+        FirebaseAdapter.FirebaseContext {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
@@ -72,6 +77,7 @@ public class MainActivity extends AppCompatActivity
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
     private boolean mFabVisible;
+    private FirebaseAdapter mFirebaseAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,7 +157,17 @@ public class MainActivity extends AppCompatActivity
         };
         mSwRegisterReceiver.setChecked(hasPermissionReceiveSms() &&
                 SmsIntentService.SmsReceiverContext.getInstance().getReceiverContext() != null);
+        mFirebaseAdapter = new FirebaseAdapter(this);
+        mFirebaseAdapter.attach();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mFirebaseAdapter.detach();
+    }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -267,6 +283,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onNewSmscData(ContentValues cv) {
+        getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv, null, null);
+        // TODO ask ContentProvider
+    }
+
     // util methods
 
     public boolean isTaskSuccessful() {
@@ -296,6 +318,7 @@ public class MainActivity extends AppCompatActivity
         return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
     }
 
+
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         if (mDatabase == null) {
@@ -320,7 +343,6 @@ public class MainActivity extends AppCompatActivity
         });
         return false;
     }
-
 
     private void showPushResult(boolean success) {
         int resId = success ? R.string.push_sent_success : R.string.push_sent_failure;

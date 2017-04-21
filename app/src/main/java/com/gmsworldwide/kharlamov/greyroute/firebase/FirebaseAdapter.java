@@ -10,34 +10,35 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Created by Slipstream-DESKTOP on 13.04.2017.
  */
 
-class FirebaseAdapter {
+public class FirebaseAdapter {
 
+    // TODO make service
     private static final String TAG = "adapter";
     private DatabaseReference mReference;
-    // TODO remove Singleton and make attaching to Activity
+    private ValueEventListener mListener;
+    private FirebaseContext mFirebaseContext;
 
-    private static final FirebaseAdapter ourInstance = new FirebaseAdapter();
-
-    static FirebaseAdapter getInstance() {
-        return ourInstance;
-    }
-
-    private FirebaseAdapter() {
+    public FirebaseAdapter(@NotNull FirebaseContext context) {
+        this.mFirebaseContext = context;
         this.mReference = FirebaseDatabase.getInstance().getReference();
     }
 
-    private void loadAggregatorSmscs () {
-        mReference.child("aggregator_smsc").addValueEventListener(new ValueEventListener() {
+    public void attach () {
+        mListener = new ValueEventListener() { // TODO change to ChildEventListener
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot smscPattern: dataSnapshot.getChildren()){
                     KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR, smscPattern.getValue().toString(), smscPattern.getKey());
                     ContentValues cv = smsc.makeContentValues();
-                    // TODO call to content provider
+                    if (mFirebaseContext != null) {
+                        mFirebaseContext.onNewSmscData(cv);
+                    }
                 }
             }
 
@@ -45,6 +46,17 @@ class FirebaseAdapter {
             public void onCancelled(DatabaseError databaseError) {
                 Log.e(TAG, databaseError.getMessage());
             }
-        });
+        };
+        mReference.child("aggregator_smsc").addValueEventListener(mListener);
     }
+
+    public void detach () {
+        mReference.child("aggregator_smsc").removeEventListener(mListener);
+        mListener = null;
+    }
+
+    public interface FirebaseContext {
+        void onNewSmscData(ContentValues cv);
+    }
+
 }
