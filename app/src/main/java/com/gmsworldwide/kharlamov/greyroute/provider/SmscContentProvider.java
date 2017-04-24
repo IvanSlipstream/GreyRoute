@@ -91,7 +91,8 @@ public class SmscContentProvider extends ContentProvider {
         Context context = getContext();
         switch (sUriMatcher.match(uri)){
             case CODE_KNOWN_SMSC:
-                rows = mDatabaseWrite.update(DbHelper.KnownSmscFields.TABLE_NAME, values, selection, selectionArgs);
+                rows = mDatabaseWrite.updateWithOnConflict(DbHelper.KnownSmscFields.TABLE_NAME, values,
+                        selection, selectionArgs, SQLiteDatabase.CONFLICT_REPLACE);
         }
         if (context != null && rows > 0) {
             context.getContentResolver().notifyChange(uri, null);

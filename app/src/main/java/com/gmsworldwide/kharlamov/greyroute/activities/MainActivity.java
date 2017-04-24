@@ -34,11 +34,13 @@ import android.widget.Toast;
 
 import com.gmsworldwide.kharlamov.greyroute.BuildConfig;
 import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.db.DbHelper;
 import com.gmsworldwide.kharlamov.greyroute.firebase.FirebaseAdapter;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
 import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
+import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.greyroute.provider.SmscContentProvider;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
@@ -285,8 +287,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onNewSmscData(ContentValues cv) {
-        getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv, null, null);
-        // TODO ask ContentProvider
+        int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
+                DbHelper.createWhereStatement(cv, DbHelper.KnownSmscFields.SMSC_PREFIX), null);
+        Log.d("new_smsc_data", String.format("%d rows to update", rows));
+        if (rows == 0) {
+            getContentResolver().insert(SmscContentProvider.URI_KNOWN_SMSC, cv);
+        }
     }
 
     // util methods

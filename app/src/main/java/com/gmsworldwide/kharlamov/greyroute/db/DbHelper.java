@@ -1,10 +1,13 @@
 package com.gmsworldwide.kharlamov.greyroute.db;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
+
+import java.util.Locale;
 
 /**
  * Created by Slipstream-DESKTOP on 13.04.2017.
@@ -55,5 +58,20 @@ public class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
 
+    }
+
+    /**
+     * Creates statement for "where" clause to pass in update operations
+     * @param cv data to insert
+     * @param key field name which identifies the records to be updated
+     * @return statement
+     */
+    public static String createWhereStatement(ContentValues cv, String key){
+        if (cv.containsKey(key)) {
+            return String.format(Locale.getDefault(), "%s = '%s'",
+                    key, cv.getAsString(key));
+        } else {
+            return null;
+        }
     }
 }

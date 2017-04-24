@@ -35,6 +35,7 @@ public class FirebaseAdapter {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot smscPattern: dataSnapshot.getChildren()){
                     KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR, smscPattern.getValue().toString(), smscPattern.getKey());
+                    Log.d("new_smsc_data", smsc.toString());
                     ContentValues cv = smsc.makeContentValues();
                     if (mFirebaseContext != null) {
                         mFirebaseContext.onNewSmscData(cv);
