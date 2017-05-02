@@ -56,7 +56,8 @@
             android:name=".provider.SmscContentProvider"
             android:authorities="com.gmsworldwide.kharlamov.greyroute"
             android:enabled="true"
-            android:exported="true"></provider>
+            android:exported="true" />
+
     </application>
 
 </manifest>

@@ -1,6 +1,7 @@
 package com.gmsworldwide.kharlamov.greyroute.service;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,8 +10,15 @@ import android.os.ResultReceiver;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
-import com.gmsworldwide.kharlamov.greyroute.firebase.SmscDatabaseProcessor;
+import com.gmsworldwide.kharlamov.greyroute.db.DbHelper;
+import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
+import com.gmsworldwide.kharlamov.greyroute.provider.SmscContentProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Objects;
 
 import static com.gmsworldwide.kharlamov.greyroute.activities.MainActivity.CSV_REPORT_HEADER;
 
@@ -26,7 +35,7 @@ public class SmsIntentService extends IntentService {
     private static final String ACTION_RECEIVE_SMS = "com.gmsworldwide.kharlamov.greyroute.action.RECEIVE_SMS";
     private static final String ACTION_SET_LISTENER = "com.gmsworldwide.kharlamov.greyroute.action.SET_LISTENER";
     private static final String ACTION_MAKE_CSV_REPORT = "com.gmsworldwide.kharlamov.greyroute.action.MAKE_CSV_REPORT";
-    private static final String ACTION_MATCH_SMSC = "com.gmsworldwide.kharlamov.greyroute.action.MATCH_SMSC";
+    private static final String ACTION_SYNC_SMSCS = "com.gmsworldwide.kharlamov.greyroute.action.MATCH_SMSC";
 
     private static final String EXTRA_LISTENER = "com.gmsworldwide.kharlamov.greyroute.extra.LISTENER";
     private static final String EXTRA_SMS = "com.gmsworldwide.kharlamov.greyroute.extra.SMS";
@@ -40,6 +49,8 @@ public class SmsIntentService extends IntentService {
     public static final int RESULT_CODE_NEW_SMS = 1;
     public static final int RESULT_CODE_CSV_SAVED = 2;
 
+    private static ValueEventListener sListener = null;
+    private static final Object sListenerLock = new Object();
 
     public SmsIntentService() {
         super("SmsIntentService");
@@ -67,11 +78,9 @@ public class SmsIntentService extends IntentService {
         context.startService(intent);
     }
 
-    public static void startActionReceiveSms(Context context, String smscAddress, ResultReceiver receiver) {
+    public static void startActionSyncSmscs(Context context) {
         Intent intent = new Intent(context, SmsIntentService.class);
-        intent.setAction(ACTION_RECEIVE_SMS);
-        intent.putExtra(EXTRA_SMSC_ADDRESS, smscAddress);
-        intent.putExtra(EXTRA_LISTENER, receiver);
+        intent.setAction(ACTION_SYNC_SMSCS);
         context.startService(intent);
     }
 
@@ -93,16 +102,15 @@ public class SmsIntentService extends IntentService {
                     ArrayList<SmsBriefData> smsList = intent.getParcelableArrayListExtra(EXTRA_SMS_LIST);
                     handleActionMakeCSVReport(smsList, csvResultReceiver);
                     break;
-                case ACTION_MATCH_SMSC:
-                    final ResultReceiver matchResultReceiver = intent.getParcelableExtra(EXTRA_LISTENER);
-                    String smsc = intent.getStringExtra(EXTRA_SMSC_ADDRESS);
-                    handleActionMatchSmsc(smsc, matchResultReceiver);
+                case ACTION_SYNC_SMSCS:
+                    handleActionSyncSmscs();
+                    break;
             }
         }
     }
 
     private void handleActionReceiveSms(Intent smsIntent) {
-        ResultReceiver receiver = SmsReceiverContext.getInstance().getReceiverContext();
+        ResultReceiver receiver = ServiceSinglets.getInstance().getReceiverContext();
         if (receiver !=null){
             Bundle bundle = new Bundle();
             Object[] pduArray = (Object[]) smsIntent.getExtras().get(PDU_KEY);
@@ -120,7 +128,7 @@ public class SmsIntentService extends IntentService {
     }
 
     private void handleActionSetListener(ResultReceiver receiver) {
-        SmsReceiverContext.getInstance().setReceiverContext(receiver);
+        ServiceSinglets.getInstance().setReceiverContext(receiver);
     }
 
     private void handleActionMakeCSVReport(ArrayList<SmsBriefData> smsList, ResultReceiver receiver){
@@ -145,21 +153,49 @@ public class SmsIntentService extends IntentService {
         }
     }
 
-    private void handleActionMatchSmsc(String smsc, ResultReceiver matchResultReceiver) {
-        SmscDatabaseProcessor processor = new SmscDatabaseProcessor(matchResultReceiver);
-        processor.matchSmscAddress(smsc);
+    private void handleActionSyncSmscs() {
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+        synchronized (sListenerLock){
+            if (sListener == null){
+                sListener = new ValueEventListener() { // TODO change to ChildEventListener
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot smscPattern : dataSnapshot.getChildren()) {
+                            KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR, smscPattern.getValue().toString(), smscPattern.getKey());
+                            Log.d("new_smsc_data", smsc.toString());
+                            ContentValues cv = smsc.makeContentValues();
+                            int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
+                                    DbHelper.createWhereStatement(cv, DbHelper.KnownSmscFields.SMSC_PREFIX), null);
+                            Log.d("new_smsc_data", String.format("%d rows to update", rows));
+                            if (rows == 0) {
+                                getContentResolver().insert(SmscContentProvider.URI_KNOWN_SMSC, cv);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("service", databaseError.getMessage());
+                        Thread.currentThread().interrupt();
+                    }
+                };
+                reference.child("aggregator_smsc").addValueEventListener(sListener);
+            }
+        }
     }
 
-    public static class SmsReceiverContext {
+    public static class ServiceSinglets {
 
         private ResultReceiver mReceiverContext;
+        private static ServiceSinglets ourInstance;
 
-        private SmsReceiverContext() {
+        private ServiceSinglets() {
         }
 
-        private static SmsReceiverContext ourInstance = new SmsReceiverContext();
-
-        public static synchronized SmsReceiverContext getInstance() {
+        public static synchronized ServiceSinglets getInstance() {
+            if (ourInstance == null) {
+                ourInstance = new ServiceSinglets();
+            }
             return ourInstance;
         }
 
@@ -170,6 +206,7 @@ public class SmsIntentService extends IntentService {
         public void setReceiverContext(ResultReceiver receiverContext) {
             this.mReceiverContext = receiverContext;
         }
+
     }
 
 }

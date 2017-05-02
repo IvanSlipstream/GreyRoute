@@ -3,13 +3,10 @@ package com.gmsworldwide.kharlamov.greyroute.activities;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.ContentObserver;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -21,7 +18,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
@@ -32,18 +28,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.gmsworldwide.kharlamov.greyroute.BuildConfig;
 import com.gmsworldwide.kharlamov.greyroute.R;
-import com.gmsworldwide.kharlamov.greyroute.db.DbHelper;
-import com.gmsworldwide.kharlamov.greyroute.firebase.FirebaseAdapter;
 import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
 import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
-import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
-import com.gmsworldwide.kharlamov.greyroute.provider.SmscContentProvider;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
+import com.gmsworldwide.kharlamov.greyroute.service.SmscSyncService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
@@ -58,8 +50,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
         AnalyzeInboxFragment.OnFragmentInteractionListener,
-        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener,
-        FirebaseAdapter.FirebaseContext {
+        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
@@ -79,7 +70,6 @@ public class MainActivity extends AppCompatActivity
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
     private boolean mFabVisible;
-    private FirebaseAdapter mFirebaseAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +97,7 @@ public class MainActivity extends AppCompatActivity
                 dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
             }
         });
+        SmsIntentService.startActionSyncSmscs(this);
     }
 
     @Override
@@ -142,7 +133,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 } else {
                     // clear the listener
-                    SmsIntentService.SmsReceiverContext.getInstance().setReceiverContext(null);
+                    SmsIntentService.ServiceSinglets.getInstance().setReceiverContext(null);
                 }
             }
         });
@@ -158,18 +149,9 @@ public class MainActivity extends AppCompatActivity
             }
         };
         mSwRegisterReceiver.setChecked(hasPermissionReceiveSms() &&
-                SmsIntentService.SmsReceiverContext.getInstance().getReceiverContext() != null);
-        mFirebaseAdapter = new FirebaseAdapter(this);
-        mFirebaseAdapter.attach();
+                SmsIntentService.ServiceSinglets.getInstance().getReceiverContext() != null);
+        SmsIntentService.startActionSyncSmscs(this);
     }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mFirebaseAdapter.detach();
-    }
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -282,16 +264,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             fab.setVisibility(View.GONE);
             mFabVisible = false;
-        }
-    }
-
-    @Override
-    public void onNewSmscData(ContentValues cv) {
-        int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
-                DbHelper.createWhereStatement(cv, DbHelper.KnownSmscFields.SMSC_PREFIX), null);
-        Log.d("new_smsc_data", String.format("%d rows to update", rows));
-        if (rows == 0) {
-            getContentResolver().insert(SmscContentProvider.URI_KNOWN_SMSC, cv);
         }
     }
 
