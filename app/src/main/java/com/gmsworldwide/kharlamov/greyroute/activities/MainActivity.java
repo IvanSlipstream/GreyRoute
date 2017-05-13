@@ -33,6 +33,8 @@ import com.gmsworldwide.kharlamov.greyroute.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.ReportChooseDialog;
 import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.fragments.PermissionExplanationDialog;
+import com.gmsworldwide.kharlamov.greyroute.fragments.SmscDetailsFragment;
+import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 import com.gmsworldwide.kharlamov.greyroute.service.SmscSyncService;
@@ -50,7 +52,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
         AnalyzeInboxFragment.OnFragmentInteractionListener,
-        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
+        ReportChooseDialog.OnFragmentInteractionListener,
+        SmsListFragment.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
@@ -62,6 +65,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG_ANALYSIS_FORM = "analysis_form";
     private static final String TAG_SMS_LIST = "sms_list";
     private static final String TAG_REPORT_CHOICE_DIALOG = "report_choice";
+    private static final String TAG_SMSC_DETAILS = "smsc_details";
     private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
     private static final String RETAIN_INSTANCE_KEY_FAB_VISIBILITY = "fab_visible";
     private static final byte CAUSE_NO_SMS_CHOSEN = 1;
@@ -251,6 +255,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onLegalityIconClicked(KnownSmsc knownSmsc) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.cl_main, SmscDetailsFragment.newInstance(knownSmsc), TAG_SMSC_DETAILS)
+                .commit();
+    }
+
+    @Override
     public void onBackStackChanged() {
         // show or hide our FAB depending on SmsListFragment visible or not
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
@@ -291,11 +302,11 @@ public class MainActivity extends AppCompatActivity
         return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
     }
 
+
     private boolean hasPermissionWriteExternalStorage(){
         int receiveSmsPermissions = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         return (receiveSmsPermissions == PackageManager.PERMISSION_GRANTED);
     }
-
 
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -311,6 +322,7 @@ public class MainActivity extends AppCompatActivity
             mSimOperator = manager.getSimOperator();
         }
         Task<Void> task = mDatabase.child("new_smsc").child(mSimOperator).child(data.getSmsc()).setValue(dateString);
+        // FIXME: 08.05.2017 NPE on null SMSC
         task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

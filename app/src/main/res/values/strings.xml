@@ -28,5 +28,6 @@
     <string name="accept">OK</string>
     <string name="hint_open_csv">Open</string>
     <string name="hint_no_csv_handler">No application to open CSV file</string>
+    <string name="placeholder_match_smsc">SMSC match</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.gmsworldwide.kharlamov.greyroute.models;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -24,6 +25,12 @@ public class KnownSmsc implements Parcelable {
         this.mLegality = legality;
         this.mCarrierName = carrierName;
         this.mSmscPrefix = smscAddress;
+    }
+
+    public KnownSmsc(Cursor c){
+        this.mCarrierName = c.getString(c.getColumnIndex(DbHelper.KnownSmscFields.CARRIER_NAME));
+        this.mSmscPrefix = c.getString(c.getColumnIndex(DbHelper.KnownSmscFields.SMSC_PREFIX));
+        this.mLegality = c.getInt(c.getColumnIndex(DbHelper.KnownSmscFields.LEGALITY));
     }
 
     private KnownSmsc(Parcel in) {
@@ -66,6 +73,14 @@ public class KnownSmsc implements Parcelable {
 
     public String getCarrierName() {
         return mCarrierName;
+    }
+
+    public String getSmscPrefix() {
+        return mSmscPrefix;
+    }
+
+    public int getLegality() {
+        return mLegality;
     }
 
     public ContentValues makeContentValues() {

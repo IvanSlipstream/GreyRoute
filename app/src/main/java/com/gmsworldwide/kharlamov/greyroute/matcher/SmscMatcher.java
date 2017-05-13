@@ -20,11 +20,16 @@ public class SmscMatcher {
         this.mKnownSmscList = smscList;
     }
 
+    /**
+     * Matches given SMSC address against known SMSC addresses
+     * @param smscAddress SMSC address to match
+     * @return object representing match result
+     */
     public KnownSmsc matchSmscAddress(String smscAddress) {
         KnownSmsc result = null;
         int matchingDigits = 0;
         for (KnownSmsc knownSmsc: mKnownSmscList) {
-            if (smscAddress.startsWith(knownSmsc.getSmscPrefix())){
+            if (smscAddress != null && smscAddress.startsWith(knownSmsc.getSmscPrefix())){
                 if (matchingDigits < knownSmsc.getSmscPrefix().length()) {
                     matchingDigits = knownSmsc.getSmscPrefix().length();
                     result = knownSmsc;

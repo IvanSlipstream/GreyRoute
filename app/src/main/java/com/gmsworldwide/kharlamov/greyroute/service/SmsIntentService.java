@@ -40,7 +40,6 @@ public class SmsIntentService extends IntentService {
     private static final String EXTRA_LISTENER = "com.gmsworldwide.kharlamov.greyroute.extra.LISTENER";
     private static final String EXTRA_SMS = "com.gmsworldwide.kharlamov.greyroute.extra.SMS";
     private static final String EXTRA_SMS_LIST = "com.gmsworldwide.kharlamov.greyroute.extra.SMS_LIST";
-    private static final String EXTRA_SMSC_ADDRESS = "com.gmsworldwide.kharlamov.greyroute.extra.SMSC";
 
     private static final String PDU_KEY = "pdus";
     public static final String SMS_KEY = "sms";
@@ -161,7 +160,8 @@ public class SmsIntentService extends IntentService {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for (DataSnapshot smscPattern : dataSnapshot.getChildren()) {
-                            KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR, smscPattern.getValue().toString(), smscPattern.getKey());
+                            KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR,
+                                    smscPattern.getValue().toString(), smscPattern.getKey());
                             Log.d("new_smsc_data", smsc.toString());
                             ContentValues cv = smsc.makeContentValues();
                             int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
