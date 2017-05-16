@@ -255,9 +255,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLegalityIconClicked(KnownSmsc knownSmsc) {
+    public void onLegalityIconClicked(KnownSmsc knownSmsc, float invokerX, float invokerY) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.cl_main, SmscDetailsFragment.newInstance(knownSmsc), TAG_SMSC_DETAILS)
+                .replace(R.id.cl_main, SmscDetailsFragment.newInstance(knownSmsc, invokerX, invokerY), TAG_SMSC_DETAILS)
                 .commit();
     }
 

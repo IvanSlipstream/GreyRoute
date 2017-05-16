@@ -334,12 +334,12 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         @Override
         public void onClick(View view) {
             if (mKnownSmsc != null) {
-                mListener.onLegalityIconClicked(mKnownSmsc);
+                mListener.onLegalityIconClicked(mKnownSmsc, view.getLeft(), view.getBottom());
             }
         }
     }
 
     public interface OnFragmentInteractionListener {
-        void onLegalityIconClicked(KnownSmsc knownSmsc);
+        void onLegalityIconClicked(KnownSmsc knownSmsc, float invokerX, float invokerY);
     }
 }
