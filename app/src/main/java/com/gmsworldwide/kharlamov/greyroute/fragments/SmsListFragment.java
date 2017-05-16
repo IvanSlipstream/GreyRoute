@@ -327,7 +327,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
         private KnownSmsc mKnownSmsc;
 
-        public OnLegalityImageClickListener(KnownSmsc knownSmsc) {
+        OnLegalityImageClickListener(KnownSmsc knownSmsc) {
             this.mKnownSmsc = knownSmsc;
         }
 
