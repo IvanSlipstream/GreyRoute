@@ -14,6 +14,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.gmsworldwide.kharlamov.greyroute.R;
+import com.gmsworldwide.kharlamov.greyroute.adapter.SmsListAdapter;
 import com.gmsworldwide.kharlamov.greyroute.matcher.SmscMatcher;
 import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
@@ -47,7 +49,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     private long mSelectionPeriod;
     private boolean mReloadInbox = true;
     private ContentObserver mKnownSmscObserver;
-    private OnFragmentInteractionListener mListener;
 
     public SmsListFragment() {
     }
@@ -70,17 +71,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         }
         if (savedInstanceState != null) {
             adapter.setCheckedList(savedInstanceState.getIntegerArrayList(RETAIN_INSTANCE_KEY_CHECKED_LIST));
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
         }
     }
 
@@ -138,7 +128,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
         if (adapter != null) {
             adapter.addSmsBriefData(data);
             adapter.notifyDataSetChanged();
-//            mRecyclerView.swapAdapter(adapter, false);
         }
     }
 
@@ -181,7 +170,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 }
                 adapter.setSmsBriefDataList(resultInbox);
                 adapter.notifyDataSetChanged();
-//                mRecyclerView.swapAdapter(adapter, false);
                 break;
             case LOADER_ID_KNOWN_SMSCS:
                 if (c != null) {
@@ -191,7 +179,6 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                     }
                     adapter.setKnownSmscList(resultKnownSmsc);
                     adapter.notifyDataSetChanged();
-//                    mRecyclerView.swapAdapter(adapter, false);
                 }
                 break;
         }
@@ -199,147 +186,10 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        getContext().getContentResolver().unregisterContentObserver(mKnownSmscObserver);
-        mKnownSmscObserver = null;
-    }
-
-    private class SmsHolder extends RecyclerView.ViewHolder {
-
-        private TextView mTvSmscAddress;
-        private TextView mTvText;
-        private TextView mTvTpOa;
-        private CheckBox mCbMarked;
-        private ImageView mIvLegality;
-        private boolean mMarked;
-
-        SmsHolder(View itemView) {
-            super(itemView);
-            mTvSmscAddress = (TextView) itemView.findViewById(R.id.tv_smsc_address);
-            mTvText = (TextView) itemView.findViewById(R.id.tv_sms_text);
-            mTvTpOa = (TextView) itemView.findViewById(R.id.tv_tp_oa);
-            mCbMarked = (CheckBox) itemView.findViewById(R.id.cb_check_for_report);
-            mIvLegality = (ImageView) itemView.findViewById(R.id.iv_smsc_legality);
-        }
-
-        private void mark(boolean marked){
-            mCbMarked.setChecked(marked);
-            mMarked = marked;
-        }
-
-        private boolean isMarked() {
-            return mMarked;
+        if (getContext() != null && mKnownSmscObserver != null) {
+            getContext().getContentResolver().unregisterContentObserver(mKnownSmscObserver);
+            mKnownSmscObserver = null;
         }
     }
 
-    private class SmsListAdapter extends RecyclerView.Adapter<SmsHolder> {
-
-        private ArrayList<SmsBriefData> mSmsBriefDataList;
-        private ArrayList<Integer> mCheckedList;
-        private ArrayList<KnownSmsc> mKnownSmscList;
-        private SmscMatcher mMatcher;
-
-        SmsListAdapter() {
-            this.mSmsBriefDataList = new ArrayList<>();
-            this.mCheckedList = new ArrayList<>();
-            this.mKnownSmscList = new ArrayList<>();
-        }
-
-        @Override
-        public SmsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(R.layout.view_holder_sms, parent, false);
-            return new SmsHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final SmsHolder holder, int position) {
-            SmsBriefData smsBriefData = mSmsBriefDataList.get(position);
-            holder.mTvSmscAddress.setText(smsBriefData.getSmsc());
-            holder.mTvTpOa.setText(smsBriefData.getTpOa());
-            holder.mTvText.setText(smsBriefData.getText());
-            holder.mCbMarked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    holder.mark(isChecked);
-                    int adapterPosition = holder.getAdapterPosition();
-                    if (holder.isMarked()){
-                        if (!mCheckedList.contains(adapterPosition)) {
-                            mCheckedList.add(adapterPosition);
-                        }
-                    } else {
-                        mCheckedList.remove((Integer) adapterPosition);
-                    }
-                }
-            });
-            if (mMatcher != null){
-                KnownSmsc knownSmsc = mMatcher.matchSmscAddress(smsBriefData.getSmsc());
-                if (knownSmsc != null) {
-                    holder.mIvLegality.setOnClickListener(new OnLegalityImageClickListener(knownSmsc));
-                    switch (knownSmsc.getLegality()) {
-                        case KnownSmsc.LEGALITY_AGGREGATOR:
-                            holder.mIvLegality.setVisibility(View.VISIBLE);
-                            holder.mIvLegality.setImageDrawable(getResources().getDrawable(R.mipmap.ic_aggregator_smsc));
-                            break;
-                    }
-                }
-            }
-            holder.mark(mCheckedList.contains(position));
-        }
-
-        @Override
-        public int getItemCount() {
-            return mSmsBriefDataList.size();
-        }
-
-        private void addSmsBriefData(SmsBriefData smsBriefData) {
-            mSmsBriefDataList.add(0, smsBriefData);
-            for (int i=0;i<mCheckedList.size();i++){
-                Integer itemIndex = mCheckedList.get(i);
-                itemIndex++;
-                mCheckedList.set(i, itemIndex);
-            }
-            mCheckedList.add(0);
-        }
-
-        private ArrayList<SmsBriefData> getSmsBriefDataList() {
-            return mSmsBriefDataList;
-        }
-
-        private void setSmsBriefDataList(ArrayList<SmsBriefData> smsBriefDataList) {
-            this.mSmsBriefDataList = smsBriefDataList;
-        }
-
-        ArrayList<Integer> getCheckedList() {
-            return mCheckedList;
-        }
-
-        void setCheckedList(ArrayList<Integer> checkedList) {
-            this.mCheckedList = checkedList;
-        }
-
-        private void setKnownSmscList(ArrayList<KnownSmsc> knownSmscList) {
-            this.mKnownSmscList = knownSmscList;
-            this.mMatcher = new SmscMatcher(knownSmscList);
-        }
-    }
-
-    private class OnLegalityImageClickListener implements View.OnClickListener {
-
-        private KnownSmsc mKnownSmsc;
-
-        OnLegalityImageClickListener(KnownSmsc knownSmsc) {
-            this.mKnownSmsc = knownSmsc;
-        }
-
-        @Override
-        public void onClick(View view) {
-            if (mKnownSmsc != null) {
-                mListener.onLegalityIconClicked(mKnownSmsc, view.getLeft(), view.getBottom());
-            }
-        }
-    }
-
-    public interface OnFragmentInteractionListener {
-        void onLegalityIconClicked(KnownSmsc knownSmsc, float invokerX, float invokerY);
-    }
 }

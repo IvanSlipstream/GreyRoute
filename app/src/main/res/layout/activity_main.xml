@@ -22,19 +22,6 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <TextView
-        android:id="@+id/tv_listen_incoming_sms"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/analyze_incoming_sms"
-        android:layout_gravity="top|start"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingStart="@dimen/activity_horizontal_margin"
-        android:paddingEnd="@dimen/activity_horizontal_margin" />
-
     <Switch
         android:id="@+id/sw_register_receiver"
         android:layout_width="wrap_content"
@@ -52,6 +39,18 @@
         android:layout_gravity="start|top"
         app:layout_behavior="com.gmsworldwide.kharlamov.greyroute.behavior.TextViewFrameLayoutBehavior">
 
+        <TextView
+            android:id="@+id/tv_listen_incoming_sms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:text="@string/analyze_incoming_sms"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
     </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton

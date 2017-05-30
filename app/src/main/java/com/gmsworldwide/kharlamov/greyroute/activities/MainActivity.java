@@ -52,8 +52,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
         AnalyzeInboxFragment.OnFragmentInteractionListener,
-        ReportChooseDialog.OnFragmentInteractionListener,
-        SmsListFragment.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
+        ReportChooseDialog.OnFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;TP-OA;Text\r\n";
@@ -252,13 +251,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onInboxAnalyzeFragmentResumed(){
         setTitle(R.string.title_analyze_inbox);
-    }
-
-    @Override
-    public void onLegalityIconClicked(KnownSmsc knownSmsc, float invokerX, float invokerY) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.cl_main, SmscDetailsFragment.newInstance(knownSmsc, invokerX, invokerY), TAG_SMSC_DETAILS)
-                .commit();
     }
 
     @Override

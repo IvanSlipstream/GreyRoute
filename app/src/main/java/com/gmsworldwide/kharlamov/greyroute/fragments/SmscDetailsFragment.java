@@ -53,13 +53,15 @@ public class SmscDetailsFragment extends Fragment {
         mTvSmscDetails = (TextView) view.findViewById(R.id.tv_smsc_details);
         if (container != null) {
             if (mInvokerY < container.getHeight() / 2) {
-                view.setPadding(0, (int) mInvokerY, (int) (container.getWidth() - mInvokerX), 0);
+                view.setPadding(0, view.getPaddingTop() + 5 * (int) mInvokerY, (int) (container.getWidth() - mInvokerX), 0);
+//                view.setTranslationY(view.getTranslationY()+mInvokerY);
             } else {
+//                view.setTranslationY(-mInvokerY);
                 view.setPadding(0, 0, (int) (container.getWidth() - mInvokerX), (int) (container.getHeight() - mInvokerY));
             }
         }
         mTvSmscDetails.setText(R.string.placeholder_sms_text);
-        return super.onCreateView(inflater, container, savedInstanceState);
+        return view;
     }
 
 }

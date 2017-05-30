@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.v4.app.Fragment;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.gmsworldwide.kharlamov.greyroute.activities.MainActivity;
+import com.gmsworldwide.kharlamov.greyroute.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.greyroute.service.SmsIntentService;
 import com.robotium.solo.Condition;
@@ -90,4 +92,22 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         }, 50000);
     }
 
+    public void testSmscDetailsFragment() throws Exception {
+        solo.assertCurrentActivity("wrong activity", MainActivity.class);
+        final MainActivity activity = getActivity();
+        solo.waitForView(R.id.btn_start_analyze_inbox);
+        solo.clickOnView(solo.getView(R.id.btn_start_analyze_inbox));
+        solo.waitForFragmentByTag("sms_list", 10000);
+        final SmsListFragment fragment = (SmsListFragment) activity.getSupportFragmentManager().findFragmentByTag("sms_list");
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                fragment.addSmsBriefData(new SmsBriefData("+41415739999", "omg wtf", "+994557156057"));
+            }
+        });
+        solo.waitForView(solo.getView(R.id.iv_smsc_legality));
+        solo.clickOnView(solo.getView(R.id.iv_smsc_legality));
+        solo.waitForFragmentByTag("sms_list", 1000);
+        solo.sleep(50000);
+    }
 }
