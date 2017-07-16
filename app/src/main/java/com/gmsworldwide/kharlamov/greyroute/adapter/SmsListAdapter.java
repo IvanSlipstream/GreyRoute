@@ -1,5 +1,6 @@
 package com.gmsworldwide.kharlamov.greyroute.adapter;
 
+import android.content.res.Resources;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +14,6 @@ import com.gmsworldwide.kharlamov.greyroute.R;
 import com.gmsworldwide.kharlamov.greyroute.matcher.SmscMatcher;
 import com.gmsworldwide.kharlamov.greyroute.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.greyroute.models.SmsBriefData;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -46,7 +45,9 @@ public class SmsListAdapter extends RecyclerView.Adapter<SmsListAdapter.SmsHolde
     public void onBindViewHolder(final SmsHolder holder, int position) {
         SmsBriefData smsBriefData = mSmsBriefDataList.get(position);
         holder.mTvSmscAddress.setText(smsBriefData.getSmsc());
-        holder.mTvTpOaTime.setText(smsBriefData.getTpOa());
+//        holder.mTvTpOaTime.setText(smsBriefData.getTpOa());
+        holder.mTvTpOaTime.setText(holder.mTvTpOaTime.getResources().getString(R.string.template_oa_time,
+                smsBriefData.getTpOa(), smsBriefData.getFormattedTime()));
         holder.mTvText.setText(smsBriefData.getText());
         holder.mTvText.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,11 +77,18 @@ public class SmsListAdapter extends RecyclerView.Adapter<SmsListAdapter.SmsHolde
             KnownSmsc knownSmsc = mMatcher.matchSmscAddress(smsBriefData.getSmsc());
             if (knownSmsc != null) {
                 String smscDetails = "";
+                Resources resources = holder.mIvLegality.getResources();
                 switch (knownSmsc.getLegality()) {
                     case KnownSmsc.LEGALITY_AGGREGATOR:
                         holder.mIvLegality.setVisibility(View.VISIBLE);
-                        holder.mIvLegality.setImageDrawable(holder.mIvLegality.getResources().getDrawable(R.mipmap.ic_aggregator_smsc));
-                        smscDetails = holder.mIvLegality.getResources().getString(R.string.placeholder_match_smsc);
+                        holder.mIvLegality.setImageDrawable(resources.getDrawable(R.mipmap.ic_aggregator_smsc));
+                        smscDetails = resources.getString(R.string.smsc_legality_aggregator,
+                                knownSmsc.getCarrierName());
+                        break;
+                    case KnownSmsc.LEGALITY_GREY:
+                        holder.mIvLegality.setVisibility(View.VISIBLE);
+                        holder.mIvLegality.setImageDrawable(resources.getDrawable(R.mipmap.ic_launcher));
+                        smscDetails = resources.getString(R.string.smsc_is_grey);
                         break;
                 }
                 final String finalSmscDetails = smscDetails;
