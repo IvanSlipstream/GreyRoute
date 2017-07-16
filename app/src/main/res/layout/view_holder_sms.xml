@@ -19,7 +19,7 @@
         android:layout_below="@+id/tv_smsc_details"
         android:layout_toRightOf="@+id/cb_check_for_report"
         android:layout_toEndOf="@+id/cb_check_for_report"
-        android:text="@string/placeholder_tp_oa"
+        android:text="@string/placeholder_tp_oa_time"
         />
 
     <TextView
@@ -38,8 +38,7 @@
         android:id="@+id/tv_smsc_address"
         android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
         android:text="@string/placeholder_smsc_address"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
+        android:layout_toLeftOf="@+id/iv_smsc_legality"
         android:layout_toRightOf="@+id/cb_check_for_report"
         android:layout_toEndOf="@+id/cb_check_for_report" />
 
