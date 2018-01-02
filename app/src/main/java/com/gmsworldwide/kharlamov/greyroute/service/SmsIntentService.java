@@ -27,7 +27,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.Objects;
 
 import static com.gmsworldwide.kharlamov.greyroute.activities.MainActivity.CSV_REPORT_HEADER;
 
@@ -48,7 +47,8 @@ public class SmsIntentService extends IntentService {
     public static final int RESULT_CODE_NEW_SMS = 1;
     public static final int RESULT_CODE_CSV_SAVED = 2;
 
-    private static ValueEventListener sListener = null;
+    private static ValueEventListener sAggregatorListener = null;
+    private static ValueEventListener sGrayListener = null;
     private static final Object sListenerLock = new Object();
 
     public SmsIntentService() {
@@ -154,37 +154,49 @@ public class SmsIntentService extends IntentService {
 
     private void handleActionSyncSmscs() {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-        synchronized (sListenerLock){
-            if (sListener == null){
-                sListener = new ValueEventListener() { // TODO change to ChildEventListener
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot smscPattern : dataSnapshot.getChildren()) {
-                            KnownSmsc smsc = new KnownSmsc(KnownSmsc.LEGALITY_AGGREGATOR,
-                                    smscPattern.getValue().toString(), smscPattern.getKey());
-                            Log.d("new_smsc_data", smsc.toString());
-                            ContentValues cv = smsc.makeContentValues();
-                            int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
-                                    DbHelper.createWhereStatement(cv, DbHelper.KnownSmscFields.SMSC_PREFIX), null);
-                            Log.d("new_smsc_data", String.format("%d rows to update", rows));
-                            if (rows == 0) {
-                                getContentResolver().insert(SmscContentProvider.URI_KNOWN_SMSC, cv);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.e("service", databaseError.getMessage());
-                        Thread.currentThread().interrupt();
-                    }
-                };
-                reference.child("aggregator_smsc").addValueEventListener(sListener);
+        synchronized (sListenerLock){ // TODO change to ChildEventListener
+            if (sAggregatorListener == null){
+                sAggregatorListener = new FirebaseSmscListener(KnownSmsc.LEGALITY_AGGREGATOR);
+                reference.child("aggregator_smsc").addValueEventListener(sAggregatorListener);
+            }
+            if (sGrayListener != null) {
+                sGrayListener = new FirebaseSmscListener(KnownSmsc.LEGALITY_GREY);
+                reference.child("grey_smsc").addValueEventListener(sGrayListener);
             }
         }
     }
 
-    public static class ServiceSinglets {
+    private class FirebaseSmscListener implements ValueEventListener {
+
+        private int mLegality;
+
+        FirebaseSmscListener(int legality) {
+            this.mLegality = legality;
+        }
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            for (DataSnapshot smscPattern : dataSnapshot.getChildren()) {
+                KnownSmsc smsc = new KnownSmsc(mLegality, smscPattern.getValue().toString(), smscPattern.getKey());
+                Log.d("new_smsc_data", smsc.toString());
+                ContentValues cv = smsc.makeContentValues();
+                int rows = getContentResolver().update(SmscContentProvider.URI_KNOWN_SMSC, cv,
+                        DbHelper.createWhereStatement(cv, DbHelper.KnownSmscFields.SMSC_PREFIX), null);
+                Log.d("new_smsc_data", String.format("%d rows to update", rows));
+                if (rows == 0) {
+                    getContentResolver().insert(SmscContentProvider.URI_KNOWN_SMSC, cv);
+                }
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.e("service", databaseError.getMessage());
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static class ServiceSinglets {
 
         private ResultReceiver mReceiverContext;
         private static ServiceSinglets ourInstance;
@@ -192,18 +204,18 @@ public class SmsIntentService extends IntentService {
         private ServiceSinglets() {
         }
 
-        public static synchronized ServiceSinglets getInstance() {
+        static synchronized ServiceSinglets getInstance() {
             if (ourInstance == null) {
                 ourInstance = new ServiceSinglets();
             }
             return ourInstance;
         }
 
-        public ResultReceiver getReceiverContext() {
+        ResultReceiver getReceiverContext() {
             return mReceiverContext;
         }
 
-        public void setReceiverContext(ResultReceiver receiverContext) {
+        void setReceiverContext(ResultReceiver receiverContext) {
             this.mReceiverContext = receiverContext;
         }
 
