@@ -1,27 +1,27 @@
 {
   "project_info": {
-    "project_number": "202291893960",
-    "firebase_url": "https://smsc-inspector.firebaseio.com",
-    "project_id": "smsc-inspector",
-    "storage_bucket": "smsc-inspector.appspot.com"
+    "project_number": "567825762167",
+    "firebase_url": "https://smsc-inspector-cf1cb.firebaseio.com",
+    "project_id": "smsc-inspector-cf1cb",
+    "storage_bucket": "smsc-inspector-cf1cb.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:202291893960:android:74b7690d6178dde7",
+        "mobilesdk_app_id": "1:567825762167:android:f2a7c5e38998ed72",
         "android_client_info": {
-          "package_name": "com.gmsworldwide.kharlamov.greyroute"
+          "package_name": "com.gmsworldwide.kharlamov.grey_route"
         }
       },
       "oauth_client": [
         {
-          "client_id": "202291893960-1i92bsop8cq2t8m2qhrngk9pdti35e3k.apps.googleusercontent.com",
+          "client_id": "567825762167-s12t0tk9of3t3a996oac54o53fpq7qbp.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBZjbrVQhszXmcG7J0mFqgvcOpTIN4t0hg"
+          "current_key": "AIzaSyDmjY4z9PxmjWNO_uXy5yOVOXqFI5V63Ko"
         }
       ],
       "services": {

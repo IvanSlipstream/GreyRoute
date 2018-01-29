@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:stretchColumns="1">
+
+    <TableRow>
+
+        <CalendarView
+            android:id="@+id/cv_start_date_choice"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_span="3" />
+
+    </TableRow>
+
+    <TableRow>
+
+        <EditText
+            android:id="@+id/et_start_time_choice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_span="2"
+            android:ems="10"
+            android:gravity="center_horizontal"
+            android:text="@string/midnight"
+            android:inputType="time" />
+    </TableRow>
+
+    <TableRow
+        style="?android:attr/buttonBarStyle">
+
+        <Button
+            android:id="@+id/btn_dialog_dismiss"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_weight="1"
+            android:text="@string/dismiss" />
+
+        <Button
+            android:id="@+id/btn_accept_time"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/accept"
+            android:layout_weight="1"/>
+    </TableRow>
+
+</TableLayout>
