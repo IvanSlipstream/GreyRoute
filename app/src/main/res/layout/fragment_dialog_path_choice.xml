@@ -2,19 +2,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:minWidth="300dp"
+    android:paddingStart="@dimen/activity_horizontal_margin"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-    <ImageButton
+        <ImageButton
             android:id="@+id/ib_up"
+            style="@style/Base.Widget.AppCompat.ButtonBar"
+            android:layout_gravity="bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="@style/Base.Widget.AppCompat.ButtonBar"
             android:contentDescription="@string/placeholder_up"
             android:src="@mipmap/ic_up_folder_fg" />
 
@@ -23,6 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/activity_horizontal_margin"
+            android:layout_gravity="bottom"
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium" />
 
     </LinearLayout>
@@ -31,13 +34,21 @@
         android:id="@+id/lv_file_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="10"/>
+        android:layout_weight="17"/>
 
-    <Button
-        android:id="@+id/btn_save_file"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/save" />
+        android:layout_weight="1">
+
+        <Button
+            android:id="@+id/btn_save_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:paddingEnd="@dimen/activity_horizontal_margin"
+            android:text="@string/save" />
+
+    </FrameLayout>
 
 </LinearLayout>
