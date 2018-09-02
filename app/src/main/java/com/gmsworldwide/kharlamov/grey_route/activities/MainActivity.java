@@ -30,6 +30,7 @@ import com.gmsworldwide.kharlamov.grey_route.R;
 import com.gmsworldwide.kharlamov.grey_route.fragments.AnalyzeInboxFragment;
 import com.gmsworldwide.kharlamov.grey_route.fragments.OnFragmentStateChangeListener;
 import com.gmsworldwide.kharlamov.grey_route.fragments.ReportChooseDialog;
+import com.gmsworldwide.kharlamov.grey_route.fragments.SaveLocationDialog;
 import com.gmsworldwide.kharlamov.grey_route.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.grey_route.fragments.PermissionExplanationDialog;
 import com.gmsworldwide.kharlamov.grey_route.fragments.SmscAnalyzeDialog;
@@ -54,7 +55,8 @@ public class MainActivity extends AppCompatActivity
         ReportChooseDialog.OnFragmentInteractionListener,
         SmsListFragment.OnFragmentInteractionListener,
         SmscAnalyzeDialog.OnFragmentInteractionListener,
-        OnFragmentStateChangeListener {
+        OnFragmentStateChangeListener,
+        SaveLocationDialog.OnFragmentInteractionListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
     public static final String CSV_REPORT_HEADER = "SMSC;Time;TP-OA;Text\r\n";
@@ -67,21 +69,25 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG_ANALYZE_INBOX = "analyze_inbox";
     private static final String TAG_SMS_LIST = "sms_list";
     private static final String TAG_REPORT_CHOICE_DIALOG = "report_choice";
+    private static final String TAG_REPORT_PATH_CSV_DIALOG = "location_choice";
     private static final String TAG_CUSTOM_PERIOD_DIALOG = "custom_period";
     private static final String TAG_SMSC_DETAILS = "smsc_details";
     private static final String RETAIN_INSTANCE_KEY_SELECTION_PERIOD = "selection_period";
     private static final String RETAIN_INSTANCE_KEY_FAB_VISIBILITY = "fab_visible";
     private static final String RETAIN_INSTANCE_STATE = "state";
+    private static final String RETAIN_INSTANCE_KEY_PATH_CSV = "path_csv";
     private static final byte CAUSE_NO_SMS_CHOSEN = 1;
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
     private boolean mFabVisible;
+    private String mPathToSaveCSV = "";
     private STATE mCurrentState;
 
-    private enum STATE {
-        GREETING, ANALYZE_INBOX, INBOX
-    }
 
+
+    private enum STATE {
+        GREETING, ANALYZE_INBOX, INBOX;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,10 +95,10 @@ public class MainActivity extends AppCompatActivity
         mCurrentState = STATE.GREETING;
         if (savedInstanceState != null) {
             mCurrentState = STATE.values()[savedInstanceState.getInt(RETAIN_INSTANCE_STATE, 0)];
+            mPathToSaveCSV = savedInstanceState.getString(RETAIN_INSTANCE_KEY_PATH_CSV, "");
         }
         switch (mCurrentState) {
             case GREETING:
-                // TODO: 01.11.2017 make greeting
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.cl_main, AnalyzeInboxFragment.newInstance(), TAG_ANALYZE_INBOX)
                         .commit();
@@ -106,7 +112,11 @@ public class MainActivity extends AppCompatActivity
 
         setSupportActionBar(toolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setVisibility(mFabVisible ? View.VISIBLE : View.GONE);
+        if (mFabVisible) {
+            fab.show();
+        } else {
+            fab.hide();
+        }
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -124,6 +134,7 @@ public class MainActivity extends AppCompatActivity
         outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
         outState.putBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, mFabVisible);
         outState.putInt(RETAIN_INSTANCE_STATE, mCurrentState.ordinal());
+        outState.putString(RETAIN_INSTANCE_KEY_PATH_CSV, mPathToSaveCSV);
     }
 
     @Override
@@ -149,8 +160,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // callback methods
 
+    // callback methods
     @Override
     public void onInboxAnalyzeRequested(long selectionPeriod) {
         // a callback from AnalyzeInboxFragment
@@ -197,7 +208,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCSVReportRequested() {
         if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
-            writeReportCSV();
+            SaveLocationDialog dialog = new SaveLocationDialog();
+            dialog.show(getSupportFragmentManager(), TAG_REPORT_PATH_CSV_DIALOG);
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE);
@@ -228,22 +240,28 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onPathDefined(String path) {
+        mPathToSaveCSV = path;
+        writeReportCSV();
+    }
+
+    @Override
     public void onFragmentResumed(Fragment fragment) {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fragment instanceof SmsListFragment) {
-            fab.setVisibility(View.VISIBLE);
+            fab.show();
             mCurrentState = STATE.INBOX;
         }
         if (fragment instanceof AnalyzeInboxFragment){
-            fab.setVisibility(View.GONE);
+            fab.hide();
             mCurrentState = STATE.ANALYZE_INBOX;
             setTitle(R.string.title_analyze_inbox);
             Log.d("test-"+getClass().getSimpleName(), "InboxAnalyzeFragment resumed, changing title");
         }
     }
 
-    // util methods
 
+    // util methods
 
     public boolean isTaskSuccessful() {
         return mTaskSuccessful;
@@ -255,11 +273,8 @@ public class MainActivity extends AppCompatActivity
 
     public boolean sendSmscReport(SmsBriefData data) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-        if (reference == null) {
-            showPushResult(false);
-            return false;
-        }
-        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Calendar.getInstance().getTime());
+        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()).format(Calendar.getInstance().getTime());
         // default mcc and mnc
         String simOperator = getSimOperator();
         Task<Void> task = reference.child("new_smsc").child(simOperator)
@@ -304,43 +319,10 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(findViewById(R.id.cl_main), getResources().getString(resId), Snackbar.LENGTH_LONG).show();
     }
 
-    private void showCSVReportResult(String reportFileName) {
-        String folderName = getResources().getString(R.string.downloads);
-        String location = Environment.DIRECTORY_DOWNLOADS;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            folderName = getResources().getString(R.string.documents);
-            location = Environment.DIRECTORY_DOCUMENTS;
-        }
-        final String reportPath = Environment.getExternalStoragePublicDirectory(location) + File.separator + reportFileName;
+    private void showCSVReportResult(String reportFileName, String folderName) {
         Snackbar snackbar = Snackbar.make(findViewById(R.id.cl_main),
                 getResources().getString(R.string.file_saved, reportFileName, folderName), Snackbar.LENGTH_LONG);
-        snackbar.setAction(R.string.hint_open_csv, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent;
-                Uri uri;
-                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    uri = ReportFileProvider.getUriForFile(v.getContext(),
-                            v.getContext().getApplicationContext().getPackageName() + ".provider",
-                            new File(reportPath));
-                } else {
-                    File csvFile = new File(reportPath);
-                    uri = Uri.fromFile(csvFile);
-                }
-                MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-                String mimeTypeString = mimeTypeMap.getMimeTypeFromExtension("csv");
-                intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(uri, mimeTypeString);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    startActivity(intent);
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(v.getContext(), R.string.hint_no_csv_handler, Toast.LENGTH_LONG).show();
-                }
-            }
-        });
         snackbar.show();
-
     }
 
     private void showReportFailure(int cause) {
@@ -373,14 +355,15 @@ public class MainActivity extends AppCompatActivity
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 switch (resultCode) {
                     case SmsIntentService.RESULT_CODE_FAILURE:
+                        Toast.makeText(MainActivity.this, R.string.hint_unable_to_save, Toast.LENGTH_LONG);
                         break;
                     case SmsIntentService.RESULT_CODE_CSV_SAVED:
-                        showCSVReportResult(resultData.getString(SmsIntentService.FILE_NAME_KEY)
-                        );
+                        showCSVReportResult(resultData.getString(SmsIntentService.FILE_NAME_KEY),
+                                resultData.getString(SmsIntentService.FILE_LOCATION_KEY, ""));
                         break;
                 }
             }
         };
-        SmsIntentService.startActionMakeCSVReport(this, smsList, receiver);
+        SmsIntentService.startActionMakeCSVReport(this, smsList, receiver, mPathToSaveCSV);
     }
 }

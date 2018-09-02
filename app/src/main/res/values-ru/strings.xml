@@ -37,4 +37,7 @@
     <string name="documents">Документы</string>
     <string name="downloads">Загрузки</string>
     <string name="greeting">Мы собираем информацию об SMSC, рассылающих фрод.\nПожалуйста, сообщите нам о подозрительных номерах SMSC ("серых").</string>
+    <string name="placeholder_up">Назад</string>
+    <string name="save">Сохранить сюда</string>
+    <string name="hint_unable_to_save">Ошиюка при создании отчета</string>
 </resources>

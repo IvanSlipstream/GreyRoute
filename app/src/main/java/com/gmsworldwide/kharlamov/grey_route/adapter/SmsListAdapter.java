@@ -113,7 +113,7 @@ public class SmsListAdapter extends RecyclerView.Adapter<SmsListAdapter.SmsHolde
 
     @Override
     public int getItemCount() {
-        if (mCursor != null) {
+        if (mCursor != null && !mCursor.isClosed()) {
             return mCursor.getCount();
         } else {
             return 0;

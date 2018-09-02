@@ -38,8 +38,11 @@
     <string name="midnight" translatable="false">00:00</string>
     <string name="custom_period">Custom Period</string>
     <string name="placeholder_custom_date">Custom Date</string>
-    <string name="hint_explain_not_gray">Please provide a brief explantion or specify a SMS aggregator name</string>
+    <string name="hint_explain_not_gray">Please provide a brief explanation or specify a SMS aggregator name</string>
     <string name="submit">Submit</string>
     <string name="not_gray">Not Gray!</string>
     <string name="greeting">We are collecting information on fraudulent SMSC addresses.\nPlease report us on suspected fraudulent ("gray") or not fraudulent SMSC.</string>
+    <string name="placeholder_up">up</string>
+    <string name="save">Save here</string>
+    <string name="hint_unable_to_save">Unable to save report</string>
 </resources>

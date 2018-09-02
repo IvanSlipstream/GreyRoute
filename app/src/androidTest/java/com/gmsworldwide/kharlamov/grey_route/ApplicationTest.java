@@ -1,26 +1,36 @@
 package com.gmsworldwide.kharlamov.grey_route;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.test.ActivityInstrumentationTestCase2;
+import android.support.test.rule.ActivityTestRule;
 import android.widget.EditText;
 
 import com.gmsworldwide.kharlamov.grey_route.activities.MainActivity;
+import com.gmsworldwide.kharlamov.grey_route.fragments.SaveLocationDialog;
 import com.gmsworldwide.kharlamov.grey_route.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.grey_route.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.grey_route.service.SmsIntentService;
 import com.robotium.solo.Condition;
 import com.robotium.solo.Solo;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivity> {
+
+public class ApplicationTest extends ActivityTestRule<MainActivity> {
 
     private Solo solo;
 
@@ -28,16 +38,15 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         super(MainActivity.class);
     }
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
+        launchActivity(new Intent(Intent.ACTION_DEFAULT));
         solo = new Solo(getInstrumentation(), getActivity());
-        super.setUp();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         solo.finishOpenedActivities();
-        super.tearDown();
     }
 
     public void testPushMessage() throws Exception {
@@ -54,6 +63,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         assertTrue("Task has failed.", activity.isTaskSuccessful());
     }
 
+    @Test
     public void testCSVFile() throws Exception {
         final boolean[] completed = {false};
         solo.assertCurrentActivity("wrong activity", MainActivity.class);
@@ -83,7 +93,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
                 completed[0] = true;
             }
         };
-        SmsIntentService.startActionMakeCSVReport(activity, smsList, receiver);
+        SmsIntentService.startActionMakeCSVReport(activity, smsList, receiver, mPathToSaveCSV);
         solo.waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
@@ -92,6 +102,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         }, 50000);
     }
 
+    @Test
     public void testSmscDetailsFragment() throws Exception {
         solo.assertCurrentActivity("wrong activity", MainActivity.class);
         MainActivity activity = getActivity();
@@ -104,5 +115,14 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MainActivi
         solo.clickOnView(solo.getView(R.id.btn_submit));
     }
 
+
+    @Test
+    public void testFileDialog() throws Exception {
+        solo.assertCurrentActivity("wrong activity", MainActivity.class);
+        MainActivity activity = getActivity();
+        SaveLocationDialog dialog = new SaveLocationDialog();
+        dialog.show(activity.getSupportFragmentManager(), "file_choose");
+        solo.sleep(30000);
+    }
 
 }
