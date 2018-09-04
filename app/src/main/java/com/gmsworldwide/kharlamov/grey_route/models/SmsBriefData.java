@@ -5,7 +5,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by Slipstream on 30.07.2016.
@@ -16,6 +19,7 @@ public class SmsBriefData implements Parcelable {
     private String mText;
     private String mTpOa;
     private long mTime;
+    private long mSentTime;
     private long mId;
 
     public SmsBriefData(String smsc, String text, String tpOa) {
@@ -24,12 +28,13 @@ public class SmsBriefData implements Parcelable {
         this.mTpOa = tpOa;
     }
 
-    public SmsBriefData(String smsc, String text, String tpOa, long time, long id) {
+    public SmsBriefData(String smsc, String text, String tpOa, long time, long id, long sentTime) {
         this.mSmsc = smsc;
         this.mText = text;
         this.mTpOa = tpOa;
         this.mTime = time;
         this.mId = id;
+        this.mSentTime = sentTime;
     }
 
     public SmsBriefData (Cursor cursor) {
@@ -37,6 +42,7 @@ public class SmsBriefData implements Parcelable {
         this.mText = cursor.getString(cursor.getColumnIndex("body"));
         this.mTpOa = cursor.getString(cursor.getColumnIndex("address"));
         this.mTime = cursor.getLong(cursor.getColumnIndex("date"));
+        this.mSentTime = cursor.getLong(cursor.getColumnIndex("date_sent"));
         this.mId = cursor.getLong(cursor.getColumnIndex("_id"));
     }
 
@@ -45,6 +51,7 @@ public class SmsBriefData implements Parcelable {
         mText = in.readString();
         mTpOa = in.readString();
         mTime = in.readLong();
+        mSentTime = in.readLong();
         mId = in.readLong();
     }
 
@@ -66,6 +73,7 @@ public class SmsBriefData implements Parcelable {
         parcel.writeString(mText);
         parcel.writeString(mTpOa);
         parcel.writeLong(mTime);
+        parcel.writeLong(mSentTime);
         parcel.writeLong(mId);
     }
 
@@ -94,8 +102,19 @@ public class SmsBriefData implements Parcelable {
         return mTime;
     }
 
+    private String getTimeZoneName() {
+        int millis = Calendar.getInstance().get(Calendar.DST_OFFSET) +
+                Calendar.getInstance().get(Calendar.ZONE_OFFSET);
+        return String.format(Locale.getDefault(), "%+02d:%02d", millis / 3600000, millis % 3600000 / 60000);
+    }
+
     public String getFormattedTime(){
         Date date = new Date(mTime);
-        return DateFormat.getDateTimeInstance().format(date);
+        return DateFormat.getDateTimeInstance().format(date) + " " + getTimeZoneName();
+    }
+
+    public String getFormattedSentTime(){
+        Date date = new Date(mSentTime);
+        return DateFormat.getDateTimeInstance().format(date) + " " + getTimeZoneName();
     }
 }

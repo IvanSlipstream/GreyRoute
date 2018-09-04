@@ -3,6 +3,7 @@ package com.gmsworldwide.kharlamov.grey_route.adapter;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +52,10 @@ public class SmsListAdapter extends RecyclerView.Adapter<SmsListAdapter.SmsHolde
         if (mCursor != null && mCursor.getCount() > 0) {
             mCursor.moveToPosition(position);
             SmsBriefData smsBriefData = new SmsBriefData(mCursor);
+            for (int i=0;i<mCursor.getColumnCount();i++){
+                Log.d("dbg-"+SmsListFragment.class.getSimpleName(),
+                        mCursor.getColumnName(i)+"="+mCursor.getString(i));
+            }
             final Long id = smsBriefData.getId();
             holder.mTvSmscAddress.setText(smsBriefData.getSmsc());
             holder.mTvTpOaTime.setText(holder.mTvTpOaTime.getResources().getString(R.string.template_oa_time,

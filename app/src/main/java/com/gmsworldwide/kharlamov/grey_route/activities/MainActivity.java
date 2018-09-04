@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity
         SaveLocationDialog.OnFragmentInteractionListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
-    public static final String CSV_REPORT_HEADER = "SMSC;Time;TP-OA;Text\r\n";
+    public static final String CSV_REPORT_HEADER = "SMSC;Time sent;Time received;TP-OA;Text\r\n";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 switch (resultCode) {
                     case SmsIntentService.RESULT_CODE_FAILURE:
-                        Toast.makeText(MainActivity.this, R.string.hint_unable_to_save, Toast.LENGTH_LONG);
+                        Toast.makeText(MainActivity.this, R.string.hint_unable_to_save, Toast.LENGTH_LONG).show();
                         break;
                     case SmsIntentService.RESULT_CODE_CSV_SAVED:
                         showCSVReportResult(resultData.getString(SmsIntentService.FILE_NAME_KEY),
