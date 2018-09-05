@@ -40,4 +40,5 @@
     <string name="placeholder_up">Назад</string>
     <string name="save">Сохранить сюда</string>
     <string name="hint_unable_to_save">Ошиюка при создании отчета</string>
+    <string name="check_all">Отметить все</string>
 </resources>

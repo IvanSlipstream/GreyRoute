@@ -34,7 +34,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="url" value="jar:file:/E:/dev/Android/Studio/plugins/android/lib/android.jar!/images/material_design_icons/navigation/ic_arrow_upward_black_24dp.xml" />
+                                                <entry key="url" value="jar:file:/E:/dev/Android/Studio/plugins/android/lib/android.jar!/images/material_design_icons/action/ic_done_all_black_24dp.xml" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -55,7 +55,8 @@
                                   </option>
                                   <option name="values">
                                     <map>
-                                      <entry key="outputName" value="ic_up_folder_fg" />
+                                      <entry key="outputName" value="ic_mark_all" />
+                                      <entry key="theme" value="HOLO_DARK" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -104,7 +105,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="trimmed" value="true" />
+                                                <entry key="color" value="00ad50" />
                                               </map>
                                             </option>
                                           </PersistentState>
