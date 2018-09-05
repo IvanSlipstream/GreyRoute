@@ -126,13 +126,13 @@ public class SmsListAdapter extends RecyclerView.Adapter<SmsListAdapter.SmsHolde
     }
 
 
-    public ArrayList<SmsBriefData> getCheckedSmsList() {
+    public ArrayList<SmsBriefData> getSmsList(boolean checkedOnly) {
         ArrayList<SmsBriefData> result = new ArrayList<>();
         if (mCursor != null && mCursor.getCount()>0 && mCheckedList != null) {
             mCursor.moveToFirst();
             while (!mCursor.isAfterLast()) {
                 SmsBriefData smsBriefData = new SmsBriefData(mCursor);
-                if (mCheckedList.contains(smsBriefData.getId())) {
+                if (!checkedOnly || mCheckedList.contains(smsBriefData.getId())) {
                     result.add(smsBriefData);
                 }
                 mCursor.moveToNext();

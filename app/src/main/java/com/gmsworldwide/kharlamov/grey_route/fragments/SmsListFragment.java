@@ -144,7 +144,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     public ArrayList<SmsBriefData> getCheckedSmsBriefDataList(){
-        return mAdapter.getCheckedSmsList();
+        return mAdapter.getSmsList(true);
     }
 
     @Override
@@ -190,6 +190,23 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
             mKnownSmscObserver = null;
         }
         mAdapter.swapCursor(null);
+    }
+
+    public void checkAll() {
+        ArrayList<Long> checkedList = mAdapter.getCheckedList();
+        if (checkedList.size() == mAdapter.getItemCount()){
+            checkedList = new ArrayList<>();
+        } else {
+            for (SmsBriefData smsBriefData:
+                    mAdapter.getSmsList(false)){
+                long id = smsBriefData.getId();
+                if (!checkedList.contains(id)){
+                    checkedList.add(id);
+                }
+            }
+        }
+        mAdapter.setCheckedList(checkedList);
+        mAdapter.notifyDataSetChanged();
     }
 
     public interface OnFragmentInteractionListener{

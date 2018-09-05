@@ -22,6 +22,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
@@ -82,12 +84,13 @@ public class MainActivity extends AppCompatActivity
     private boolean mFabVisible;
     private String mPathToSaveCSV = "";
     private STATE mCurrentState;
-
+    private Toolbar mToolbar;
 
 
     private enum STATE {
         GREETING, ANALYZE_INBOX, INBOX;
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,9 +111,8 @@ public class MainActivity extends AppCompatActivity
                 mFabVisible = savedInstanceState.getBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, true);
                 break;
         }
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (mFabVisible) {
             fab.show();
@@ -141,6 +143,30 @@ public class MainActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         SmsIntentService.startActionSyncSmscs(this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        mToolbar.inflateMenu(R.menu.menu_main);
+        if (mCurrentState != STATE.INBOX){
+            menu.findItem(R.id.mi_check_all).setVisible(false);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.mi_check_all:
+                if (mCurrentState == STATE.INBOX){
+                    Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
+                    if (fragment != null && fragment instanceof SmsListFragment){
+                        ((SmsListFragment) fragment).checkAll();
+                    }
+                }
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -248,12 +274,21 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFragmentResumed(Fragment fragment) {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        Menu menu = toolbar.getMenu();
+        MenuItem menuItem = menu.findItem(R.id.mi_check_all);
         if (fragment instanceof SmsListFragment) {
             fab.show();
+            if (menuItem != null) {
+                menuItem.setVisible(true);
+            }
             mCurrentState = STATE.INBOX;
         }
         if (fragment instanceof AnalyzeInboxFragment){
             fab.hide();
+            if (menuItem != null) {
+                menuItem.setVisible(false);
+            }
             mCurrentState = STATE.ANALYZE_INBOX;
             setTitle(R.string.title_analyze_inbox);
             Log.d("test-"+getClass().getSimpleName(), "InboxAnalyzeFragment resumed, changing title");
