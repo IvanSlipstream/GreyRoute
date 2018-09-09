@@ -143,7 +143,7 @@ public class SmsIntentService extends IntentService {
             FileOutputStream fos = new FileOutputStream(reportFile);
             fos.write(CSV_REPORT_HEADER.getBytes("utf-16"));
             for (SmsBriefData smsBriefData: smsList) {
-                fos.write(String.format("%s;%s;%s:%s;%s\r\n",
+                fos.write(String.format("%s;%s;%s;%s;%s\r\n",
                         smsBriefData.getSmsc(),
                         smsBriefData.getFormattedTime(),
                         smsBriefData.getFormattedSentTime(),

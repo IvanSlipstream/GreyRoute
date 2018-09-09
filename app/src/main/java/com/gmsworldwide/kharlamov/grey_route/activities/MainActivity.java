@@ -1,12 +1,8 @@
 package com.gmsworldwide.kharlamov.grey_route.activities;
 
 import android.Manifest;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -25,7 +21,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.gmsworldwide.kharlamov.grey_route.R;
@@ -38,14 +33,12 @@ import com.gmsworldwide.kharlamov.grey_route.fragments.PermissionExplanationDial
 import com.gmsworldwide.kharlamov.grey_route.fragments.SmscAnalyzeDialog;
 import com.gmsworldwide.kharlamov.grey_route.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.grey_route.models.SmsBriefData;
-import com.gmsworldwide.kharlamov.grey_route.provider.ReportFileProvider;
 import com.gmsworldwide.kharlamov.grey_route.service.SmsIntentService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -65,7 +58,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
-    private static final int REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE = 3;
+    private static final int REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE = 3;
     private static final int REQUEST_CODE_WRITE_REPORT_CSV = 12;
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYZE_INBOX = "analyze_inbox";
@@ -178,9 +171,12 @@ public class MainActivity extends AppCompatActivity
                     replaceFragmentSmsList();
                 }
                 break;
-            case REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE:
+            case REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE:
+                isPermissionGranted = (grantResults.length > 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED);
                 if (isPermissionGranted) {
-                    writeReportCSV();
+                    requestSaveLocation();
                 }
                 break;
         }
@@ -205,7 +201,7 @@ public class MainActivity extends AppCompatActivity
                 dialog.show(getSupportFragmentManager(), TAG_EXPLANATION_DIALOG);
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_RECEIVE_SMS);
+                        new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_READ_SMS);
             }
         }
         setTitle(R.string.app_name);
@@ -234,11 +230,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCSVReportRequested() {
         if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
-            SaveLocationDialog dialog = new SaveLocationDialog();
-            dialog.show(getSupportFragmentManager(), TAG_REPORT_PATH_CSV_DIALOG);
+            requestSaveLocation();
         } else {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE);
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE);
         }
     }
 
@@ -296,8 +292,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    // util methods
 
+    // util methods
     public boolean isTaskSuccessful() {
         return mTaskSuccessful;
     }
@@ -323,6 +319,20 @@ public class MainActivity extends AppCompatActivity
             }
         });
         return false;
+    }
+
+    private void requestSaveLocation() {
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
+                || !hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                || !hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mPathToSaveCSV != null && mPathToSaveCSV.length() != 0) {
+            mPathToSaveCSV = Environment.DIRECTORY_DOWNLOADS;
+        }
+        SaveLocationDialog dialog = new SaveLocationDialog();
+        dialog.show(getSupportFragmentManager(), TAG_REPORT_PATH_CSV_DIALOG);
     }
 
     private String getSimOperator() {
