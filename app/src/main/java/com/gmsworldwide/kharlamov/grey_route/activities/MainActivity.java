@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
         SaveLocationDialog.OnFragmentInteractionListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
-    public static final String CSV_REPORT_HEADER = "SMSC;Time sent;Time received;TP-OA;Text\r\n";
+    public static final String CSV_REPORT_HEADER = "Time received;GMT offset;SMSC;TP-OA;Text\r\n";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;

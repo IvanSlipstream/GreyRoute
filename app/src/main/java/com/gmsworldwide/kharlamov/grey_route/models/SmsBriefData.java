@@ -110,11 +110,11 @@ public class SmsBriefData implements Parcelable {
 
     public String getFormattedTime(){
         Date date = new Date(mTime);
-        return DateFormat.getDateTimeInstance().format(date) + " " + getTimeZoneName();
+        return DateFormat.getDateTimeInstance().format(date);
     }
 
     public String getFormattedSentTime(){
         Date date = new Date(mSentTime);
-        return DateFormat.getDateTimeInstance().format(date) + " " + getTimeZoneName();
+        return DateFormat.getDateTimeInstance().format(date);
     }
 }

@@ -142,11 +142,15 @@ public class SmsIntentService extends IntentService {
             String directoryName = reportFile.getParentFile().getName();
             FileOutputStream fos = new FileOutputStream(reportFile);
             fos.write(CSV_REPORT_HEADER.getBytes("utf-16"));
+            int millis = Calendar.getInstance().get(Calendar.DST_OFFSET) +
+                    Calendar.getInstance().get(Calendar.ZONE_OFFSET);
+            String timeZone = String.format(Locale.getDefault(), "%+02d:%02d",
+                    millis / 3600000, millis % 3600000 / 60000);
             for (SmsBriefData smsBriefData: smsList) {
                 fos.write(String.format("%s;%s;%s;%s;%s\r\n",
-                        smsBriefData.getSmsc(),
                         smsBriefData.getFormattedTime(),
-                        smsBriefData.getFormattedSentTime(),
+                        timeZone,
+                        smsBriefData.getSmsc(),
                         smsBriefData.getTpOa(),
                         smsBriefData.getText().replaceAll("\\s", " ")).getBytes("utf-16"));
             }
