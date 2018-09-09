@@ -126,7 +126,9 @@
                                   </option>
                                   <option name="values">
                                     <map>
+                                      <entry key="assetType" value="IMAGE" />
                                       <entry key="iconShape" value="NONE" />
+                                      <entry key="imageAsset" value="E:\dev\Android\projects\GreyRoute\app\src\main\if_folder-web.png" />
                                       <entry key="outputName" value="ic_up_folder_fg" />
                                     </map>
                                   </option>
