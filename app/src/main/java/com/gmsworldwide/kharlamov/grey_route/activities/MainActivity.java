@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
-    private static final int REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE = 3;
+    private static final int REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE = 3;
     private static final int REQUEST_CODE_WRITE_REPORT_CSV = 12;
     private static final String TAG_EXPLANATION_DIALOG = "explanation";
     private static final String TAG_ANALYZE_INBOX = "analyze_inbox";
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity
     private String mPathToSaveCSV = "";
     private STATE mCurrentState;
     private Toolbar mToolbar;
+    private boolean mPaused = true;
 
 
     private enum STATE {
@@ -139,6 +140,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mPaused = false;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mPaused = true;
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         mToolbar.inflateMenu(R.menu.menu_main);
         if (mCurrentState != STATE.INBOX){
@@ -171,10 +184,7 @@ public class MainActivity extends AppCompatActivity
                     replaceFragmentSmsList();
                 }
                 break;
-            case REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE:
-                isPermissionGranted = (grantResults.length > 1 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                        grantResults[1] == PackageManager.PERMISSION_GRANTED);
+            case REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE:
                 if (isPermissionGranted) {
                     requestSaveLocation();
                 }
@@ -233,8 +243,8 @@ public class MainActivity extends AppCompatActivity
             requestSaveLocation();
         } else {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
-                    REQUEST_CODE_PERMISSION_WRITE_READ_EXTERNAL_STORAGE);
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_PERMISSION_WRITE_EXTERNAL_STORAGE);
         }
     }
 
@@ -323,16 +333,17 @@ public class MainActivity extends AppCompatActivity
 
     private void requestSaveLocation() {
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
-                || !hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                || !hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                || !hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
             return;
         }
         if (mPathToSaveCSV != null && mPathToSaveCSV.length() != 0) {
             mPathToSaveCSV = Environment.DIRECTORY_DOWNLOADS;
         }
-        SaveLocationDialog dialog = new SaveLocationDialog();
-        dialog.show(getSupportFragmentManager(), TAG_REPORT_PATH_CSV_DIALOG);
+        if (!mPaused){
+            SaveLocationDialog dialog = new SaveLocationDialog();
+            dialog.show(getSupportFragmentManager(), TAG_REPORT_PATH_CSV_DIALOG);
+        }
     }
 
     private String getSimOperator() {

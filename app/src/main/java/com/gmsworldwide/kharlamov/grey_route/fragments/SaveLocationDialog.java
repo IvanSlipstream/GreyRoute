@@ -27,6 +27,7 @@ import java.util.Objects;
 
 public class SaveLocationDialog extends DialogFragment implements View.OnClickListener {
 
+    private static final String RETAIN_INSTANCE_KEY_PATH = "path";
     private OnFragmentInteractionListener mListener;
     private File mCurrentPath;
     private File mRootFile;
@@ -48,6 +49,23 @@ public class SaveLocationDialog extends DialogFragment implements View.OnClickLi
         }
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(RETAIN_INSTANCE_KEY_PATH, mCurrentPath.getAbsolutePath());
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            String path = savedInstanceState.getString(RETAIN_INSTANCE_KEY_PATH);
+            if (path != null && !path.equals("")) {
+                mCurrentPath = new File(path);
+            }
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -62,7 +80,7 @@ public class SaveLocationDialog extends DialogFragment implements View.OnClickLi
         mTvPath = view.findViewById(R.id.tv_path);
         mRvFileList = view.findViewById(R.id.lv_file_list);
         mRvFileList.setLayoutManager(new LinearLayoutManager(view.getContext(), LinearLayoutManager.VERTICAL, false));
-        listDir(mRootFile);
+        listDir(mCurrentPath == null ? mRootFile : mCurrentPath);
         return view;
     }
 
@@ -76,7 +94,7 @@ public class SaveLocationDialog extends DialogFragment implements View.OnClickLi
                 if (mListener != null) {
                     mListener.onPathDefined(mCurrentPath.getAbsolutePath());
                 }
-                dismiss();
+                dismissAllowingStateLoss();
         }
     }
 

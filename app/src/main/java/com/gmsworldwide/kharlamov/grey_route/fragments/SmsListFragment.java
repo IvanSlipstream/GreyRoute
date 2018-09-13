@@ -25,6 +25,7 @@ import com.gmsworldwide.kharlamov.grey_route.provider.SmscContentProvider;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 
 public class SmsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -122,7 +123,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
     public void onPause() {
         super.onPause();
         if (mKnownSmscObserver != null) {
-            getContext().getContentResolver().unregisterContentObserver(mKnownSmscObserver);
+            Objects.requireNonNull(getContext()).getContentResolver().unregisterContentObserver(mKnownSmscObserver);
             mKnownSmscObserver = null;
         }
     }
@@ -140,7 +141,7 @@ public class SmsListFragment extends Fragment implements LoaderManager.LoaderCal
                 mAdapter.notifyDataSetChanged();
             }
         };
-        getContext().getContentResolver().registerContentObserver(SmscContentProvider.URI_KNOWN_SMSC, true, mKnownSmscObserver);
+        Objects.requireNonNull(getContext()).getContentResolver().registerContentObserver(SmscContentProvider.URI_KNOWN_SMSC, true, mKnownSmscObserver);
     }
 
     public ArrayList<SmsBriefData> getCheckedSmsBriefDataList(){
