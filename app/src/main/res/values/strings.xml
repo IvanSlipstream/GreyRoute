@@ -46,4 +46,5 @@
     <string name="save">Save here</string>
     <string name="hint_unable_to_save">Unable to save report</string>
     <string name="check_all">Check all</string>
+    <string name="send_report">Send Report</string>
 </resources>

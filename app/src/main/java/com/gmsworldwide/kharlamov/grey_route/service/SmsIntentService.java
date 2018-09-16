@@ -146,7 +146,8 @@ public class SmsIntentService extends IntentService {
                     Calendar.getInstance().get(Calendar.ZONE_OFFSET);
             String timeZone = String.format(Locale.getDefault(), "%+02d:%02d",
                     millis / 3600000, millis % 3600000 / 60000);
-            for (SmsBriefData smsBriefData: smsList) {
+            for (int i=smsList.size()-1;i>=0;i--) {
+                SmsBriefData smsBriefData = smsList.get(i);
                 fos.write(String.format("%s;%s;%s;%s;%s\r\n",
                         smsBriefData.getFormattedTime(),
                         timeZone,

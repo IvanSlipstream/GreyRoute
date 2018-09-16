@@ -3,6 +3,7 @@ package com.gmsworldwide.kharlamov.grey_route.activities;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -43,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity
     private static final byte CAUSE_NO_SMS_CHOSEN = 1;
     protected boolean mTaskSuccessful = false;
     private long mSelectionPeriod = 0;
-    private boolean mFabVisible;
+    private boolean mSendButtonVisible;
     private String mPathToSaveCSV = "";
     private STATE mCurrentState;
     private Toolbar mToolbar;
@@ -88,7 +90,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP
+                ? R.layout.activity_main
+                : R.layout.activity_main_before_v20);
         mCurrentState = STATE.GREETING;
         if (savedInstanceState != null) {
             mCurrentState = STATE.values()[savedInstanceState.getInt(RETAIN_INSTANCE_STATE, 0)];
@@ -102,25 +106,27 @@ public class MainActivity extends AppCompatActivity
                 break;
             case ANALYZE_INBOX:
                 mSelectionPeriod = savedInstanceState.getLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, 0);
-                mFabVisible = savedInstanceState.getBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, true);
+                mSendButtonVisible = savedInstanceState.getBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, true);
                 break;
         }
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (mFabVisible) {
-            fab.show();
-        } else {
-            fab.hide();
-        }
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (getSelectedSmsList() == null) return;
-                ReportChooseDialog dialog = ReportChooseDialog.newInstance();
-                dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            FloatingActionButton fab = findViewById(R.id.fab);
+            if (mSendButtonVisible) {
+                fab.show();
+            } else {
+                fab.hide();
             }
-        });
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (getSelectedSmsList() == null) return;
+                    ReportChooseDialog dialog = ReportChooseDialog.newInstance();
+                    dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
+                }
+            });
+        }
         SmsIntentService.startActionSyncSmscs(this);
     }
 
@@ -128,7 +134,7 @@ public class MainActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(RETAIN_INSTANCE_KEY_SELECTION_PERIOD, mSelectionPeriod);
-        outState.putBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, mFabVisible);
+        outState.putBoolean(RETAIN_INSTANCE_KEY_FAB_VISIBILITY, mSendButtonVisible);
         outState.putInt(RETAIN_INSTANCE_STATE, mCurrentState.ordinal());
         outState.putString(RETAIN_INSTANCE_KEY_PATH_CSV, mPathToSaveCSV);
     }
@@ -153,9 +159,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        mToolbar.inflateMenu(R.menu.menu_main);
+        // adding "send" action to menu
+        boolean oldVersion = Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+        mToolbar.inflateMenu(oldVersion ? R.menu.menu_main_before_v20 : R.menu.menu_main);
         if (mCurrentState != STATE.INBOX){
             menu.findItem(R.id.mi_check_all).setVisible(false);
+            if (oldVersion) menu.findItem(R.id.mi_send_report).setVisible(false);
         }
         return true;
     }
@@ -170,6 +179,13 @@ public class MainActivity extends AppCompatActivity
                         ((SmsListFragment) fragment).checkAll();
                     }
                 }
+                return true;
+            case R.id.mi_send_report:
+                if (getSelectedSmsList() == null){
+                    return false;
+                }
+                ReportChooseDialog dialog = ReportChooseDialog.newInstance();
+                dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
                 return true;
         }
         return false;
@@ -279,21 +295,35 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFragmentResumed(Fragment fragment) {
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        boolean oldVersion = Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+        FloatingActionButton fab = findViewById(R.id.fab);
         Toolbar toolbar = findViewById(R.id.toolbar);
         Menu menu = toolbar.getMenu();
-        MenuItem menuItem = menu.findItem(R.id.mi_check_all);
+        MenuItem miCheckAll = menu.findItem(R.id.mi_check_all);
+        MenuItem miSendReport = menu.findItem(R.id.mi_send_report);
         if (fragment instanceof SmsListFragment) {
-            fab.show();
-            if (menuItem != null) {
-                menuItem.setVisible(true);
+            if (oldVersion) {
+                if (miSendReport != null) {
+                    miSendReport.setVisible(true);
+                }
+            } else {
+                fab.show();
+            }
+            if (miCheckAll != null) {
+                miCheckAll.setVisible(true);
             }
             mCurrentState = STATE.INBOX;
         }
         if (fragment instanceof AnalyzeInboxFragment){
-            fab.hide();
-            if (menuItem != null) {
-                menuItem.setVisible(false);
+            if (oldVersion) {
+                if (miSendReport != null) {
+                    miSendReport.setVisible(false);
+                }
+            } else {
+                fab.hide();
+            }
+            if (miCheckAll != null) {
+                miCheckAll.setVisible(false);
             }
             mCurrentState = STATE.ANALYZE_INBOX;
             setTitle(R.string.title_analyze_inbox);
