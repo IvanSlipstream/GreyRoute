@@ -15,9 +15,12 @@ import java.util.TimeZone;
  */
 public class SmsBriefData implements Parcelable {
 
+    public static final char TRAILING_CHARACTER = '*';
+    private static final int END_INDEX_DEPERSONALIZED = 6;
     private String mSmsc;
     private String mText;
     private String mTpOa;
+    private String mSimImsi;
     private long mTime;
     private long mSentTime;
     private long mId;
@@ -44,12 +47,17 @@ public class SmsBriefData implements Parcelable {
         this.mTime = cursor.getLong(cursor.getColumnIndex("date"));
         this.mSentTime = cursor.getLong(cursor.getColumnIndex("date_sent"));
         this.mId = cursor.getLong(cursor.getColumnIndex("_id"));
+        int imsiIndex = cursor.getColumnIndex("sim_imsi");
+        this.mSimImsi = imsiIndex == -1 && cursor.getString(imsiIndex) != null
+                ? ""
+                : cursor.getString(imsiIndex).substring(0, END_INDEX_DEPERSONALIZED)+TRAILING_CHARACTER;
     }
 
     private SmsBriefData(Parcel in) {
         mSmsc = in.readString();
         mText = in.readString();
         mTpOa = in.readString();
+        mSimImsi = in.readString();
         mTime = in.readLong();
         mSentTime = in.readLong();
         mId = in.readLong();
@@ -72,6 +80,7 @@ public class SmsBriefData implements Parcelable {
         parcel.writeString(mSmsc);
         parcel.writeString(mText);
         parcel.writeString(mTpOa);
+        parcel.writeString(mSimImsi);
         parcel.writeLong(mTime);
         parcel.writeLong(mSentTime);
         parcel.writeLong(mId);
@@ -100,6 +109,10 @@ public class SmsBriefData implements Parcelable {
 
     public long getTime() {
         return mTime;
+    }
+
+    public String getSimImsiPrefix() {
+        return mSimImsi;
     }
 
     private String getTimeZoneName() {
