@@ -4,13 +4,15 @@ import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.ResultReceiver;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import com.gmsworldwide.kharlamov.grey_route.R;
 import com.gmsworldwide.kharlamov.grey_route.db.DbHelper;
+import com.gmsworldwide.kharlamov.grey_route.fragments.SmsListFragment;
 import com.gmsworldwide.kharlamov.grey_route.models.KnownSmsc;
 import com.gmsworldwide.kharlamov.grey_route.models.SmsBriefData;
 import com.gmsworldwide.kharlamov.grey_route.provider.SmscContentProvider;
@@ -71,10 +73,15 @@ public class SmsIntentService extends IntentService {
         context.startService(intent);
     }
 
-    public static void startActionMakeCSVReport(Context context, ArrayList<SmsBriefData> smsList, ResultReceiver receiver, String pathToSaveCSV) {
+    public static void startActionMakeCSVReport(Context context, ArrayList<Long> smsIdList, ResultReceiver receiver, String pathToSaveCSV) {
         Intent intent = new Intent(context, SmsIntentService.class);
+        // simplifying array to write to parcel
+        long[] smsIdListSimple = new long[smsIdList.size()];
+        for (int i=0;i<smsIdList.size();i++) {
+            smsIdListSimple[i] = smsIdList.get(i);
+        }
         intent.setAction(ACTION_MAKE_CSV_REPORT);
-        intent.putExtra(EXTRA_SMS_LIST, smsList);
+        intent.putExtra(EXTRA_SMS_LIST, smsIdListSimple);
         intent.putExtra(EXTRA_LISTENER, receiver);
         intent.putExtra(EXTRA_PATH_CSV, pathToSaveCSV);
         context.startService(intent);
@@ -102,8 +109,8 @@ public class SmsIntentService extends IntentService {
                 case ACTION_MAKE_CSV_REPORT:
                     final String pathToSaveCSV = intent.getStringExtra(EXTRA_PATH_CSV);
                     final ResultReceiver csvResultReceiver = intent.getParcelableExtra(EXTRA_LISTENER);
-                    ArrayList<SmsBriefData> smsList = intent.getParcelableArrayListExtra(EXTRA_SMS_LIST);
-                    handleActionMakeCSVReport(smsList, csvResultReceiver, pathToSaveCSV);
+                    long[] smsIdList = intent.getLongArrayExtra(EXTRA_SMS_LIST);
+                    handleActionMakeCSVReport(smsIdList, csvResultReceiver, pathToSaveCSV);
                     break;
                 case ACTION_SYNC_SMSCS:
                     handleActionSyncSmscs();
@@ -134,7 +141,7 @@ public class SmsIntentService extends IntentService {
         ServiceSinglets.getInstance().setReceiverContext(receiver);
     }
 
-    private void handleActionMakeCSVReport(ArrayList<SmsBriefData> smsList, ResultReceiver receiver, String pathToSaveCSV){
+    private void handleActionMakeCSVReport(long[] smsIdList, ResultReceiver receiver, String pathToSaveCSV){
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Calendar.getInstance().getTime());
         String fileName = String.format("report_%s.csv", timeStamp);
         File reportFile = new File(pathToSaveCSV, fileName);
@@ -146,14 +153,24 @@ public class SmsIntentService extends IntentService {
                     Calendar.getInstance().get(Calendar.ZONE_OFFSET);
             String timeZone = String.format(Locale.getDefault(), "%+02d:%02d",
                     millis / 3600000, millis % 3600000 / 60000);
-            for (int i=smsList.size()-1;i>=0;i--) {
-                SmsBriefData smsBriefData = smsList.get(i);
-                fos.write(String.format("%s;%s;%s;%s;%s\r\n",
-                        smsBriefData.getFormattedTime(),
-                        timeZone,
-                        smsBriefData.getSmsc(),
-                        smsBriefData.getTpOa(),
-                        smsBriefData.getText().replaceAll("\\s", " ")).getBytes("utf-16"));
+            for (int i=smsIdList.length-1;i>=0;i--) {
+                String condition = String.format(Locale.getDefault(), "_id=%d", smsIdList[i]);
+                Cursor c = getContentResolver().query(SmsListFragment.URI_SMS_INBOX,
+                        null, condition, null, null);
+                if (c != null && c.getCount() != 0) {
+                    c.moveToFirst();
+                    SmsBriefData smsBriefData = new SmsBriefData(c);
+                    fos.write(String.format("%s;%s;%s;%s;%s;%s\r\n",
+                            smsBriefData.getSimImsiPrefix().equals("")
+                                    ? getResources().getString(R.string.unknown_imsi)
+                                    : smsBriefData.getSimImsiPrefix(),
+                            smsBriefData.getFormattedTime(),
+                            timeZone,
+                            smsBriefData.getTpOa(),
+                            smsBriefData.getSmsc(),
+                            smsBriefData.getText().replaceAll("\\s", " ")).getBytes("utf-16"));
+                    c.close();
+                }
             }
             fos.close();
             Log.d("test", "writeReportCSV: done "+reportFile.getAbsolutePath());
