@@ -44,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
     implements PermissionExplanationDialog.OnFragmentInteractionListener,
@@ -56,7 +55,7 @@ public class MainActivity extends AppCompatActivity
         SaveLocationDialog.OnFragmentInteractionListener {
 
     public static final String UNKNOWN_MCC_MNC = "UNKNOWN";
-    public static final String CSV_REPORT_HEADER = "Time received;GMT offset;SMSC;TP-OA;Text\r\n";
+    public static final String CSV_REPORT_HEADER = "IMSI prefix;Time received;GMT offset;SMSC;TP-OA;Text\r\n";
 
     private static final int REQUEST_CODE_PERMISSION_RECEIVE_SMS = 1;
     private static final int REQUEST_CODE_PERMISSION_READ_SMS = 2;
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP
+        setContentView(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                 ? R.layout.activity_main
                 : R.layout.activity_main_before_v20);
         mCurrentState = STATE.GREETING;
@@ -121,7 +120,7 @@ public class MainActivity extends AppCompatActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (getSelectedSmsList() == null) return;
+                    if (getSelectedSmsIdList() == null) return;
                     ReportChooseDialog dialog = ReportChooseDialog.newInstance();
                     dialog.show(getSupportFragmentManager(), TAG_REPORT_CHOICE_DIALOG);
                 }
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.mi_send_report:
-                if (getSelectedSmsList() == null){
+                if (getSelectedSmsIdList() == null){
                     return false;
                 }
                 ReportChooseDialog dialog = ReportChooseDialog.newInstance();
@@ -227,7 +226,7 @@ public class MainActivity extends AppCompatActivity
                 dialog.show(getSupportFragmentManager(), TAG_EXPLANATION_DIALOG);
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECEIVE_SMS}, REQUEST_CODE_PERMISSION_READ_SMS);
+                        new String[]{Manifest.permission.READ_SMS}, REQUEST_CODE_PERMISSION_READ_SMS);
             }
         }
         setTitle(R.string.app_name);
@@ -245,11 +244,23 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPushReportRequested() {
-        ArrayList<SmsBriefData> smsList = getSelectedSmsList();
-        if (smsList != null) {
-            for (SmsBriefData smsBriefData: smsList){
-                sendSmscReport(smsBriefData);
-            }
+        ArrayList<Long> smsIdList = getSelectedSmsIdList();
+        if (smsIdList != null) {
+            ResultReceiver receiver = new ResultReceiver(new Handler()){
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    switch (resultCode){
+                        case SmsIntentService.RESULT_CODE_FAILURE:
+                            mTaskSuccessful = false;
+                            break;
+                        case SmsIntentService.RESULT_CODE_PUSH_SUCCESSFUL:
+                            mTaskSuccessful = true;
+                            break;
+                    }
+                    showPushResult(mTaskSuccessful);
+                }
+            };
+            SmsIntentService.startActionSendPushReport(this, receiver, smsIdList);
         }
     }
 
@@ -342,24 +353,6 @@ public class MainActivity extends AppCompatActivity
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public boolean sendSmscReport(SmsBriefData data) {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
-                Locale.getDefault()).format(Calendar.getInstance().getTime());
-        // default mcc and mnc
-        String simOperator = getSimOperator();
-        Task<Void> task = reference.child("new_smsc").child(simOperator)
-                .child(data.getSmsc() != null ? data.getSmsc() : "null").setValue(dateString);
-        task.addOnCompleteListener(this, new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                mTaskSuccessful = task.isSuccessful();
-                Log.d("test", String.format("Task %s completed, %s.", task.toString(), task.isSuccessful() ? "success" : "failure"));
-                showPushResult(mTaskSuccessful);
-            }
-        });
-        return false;
-    }
 
     private void requestSaveLocation() {
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
@@ -387,8 +380,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Nullable
-    private ArrayList<SmsBriefData> getSelectedSmsList() {
-        ArrayList<SmsBriefData> smsList;
+    private ArrayList<Long> getSelectedSmsIdList() {
+        ArrayList<Long> smsList;
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(TAG_SMS_LIST);
         if (fragment != null && fragment instanceof SmsListFragment) {
             smsList = ((SmsListFragment) fragment).getCheckedSmsBriefDataList();
@@ -432,8 +425,8 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, R.string.error_no_external_storage, Toast.LENGTH_SHORT).show();
             return;
         }
-        ArrayList<SmsBriefData> smsList = getSelectedSmsList();
-        if (smsList == null) {
+        ArrayList<Long> smsIdList = getSelectedSmsIdList();
+        if (smsIdList == null) {
             return;
         }
         ResultReceiver receiver = new ResultReceiver(new Handler()) {
@@ -450,6 +443,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         };
-        SmsIntentService.startActionMakeCSVReport(this, smsList, receiver, mPathToSaveCSV);
+        SmsIntentService.startActionMakeCSVReport(this, smsIdList, receiver, mPathToSaveCSV);
     }
 }
